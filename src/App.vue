@@ -1,0 +1,76 @@
+<template>
+  <div id="app">
+    <b-navbar class="is-primary" :mobile-burger="true">
+      <template #brand>
+        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
+          <img src="@/assets/images/cardano-aim_white.png" alt="Cardano Aim logo" />
+        </b-navbar-item>
+      </template>
+      <template #end>
+        <b-navbar-dropdown
+          :label="langs[$i18n.locale]"
+          v-if="Object.keys(langs).length > 1"
+        >
+          <b-navbar-item
+            @click="changeLocale(lang)"
+            v-for="(name, lang) in langs"
+            :key="`lang-${lang}`"
+          >
+            {{ name }}
+          </b-navbar-item>
+        </b-navbar-dropdown>
+        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
+          {{ $t("general.MI_DISPERSAL") }}
+        </b-navbar-item>
+      </template>
+    </b-navbar>
+    <div class="section container">
+      <div class="content-wrapper">
+        <router-view />
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import langs from "@/locales/locales";
+export default {
+  data() {
+    return {
+      challenges: [],
+      langs: langs,
+    };
+  },
+
+  methods: {
+    changeLocale(locale) {
+      this.$store.commit("user/setLocale", locale);
+      this.$i18n.locale = locale;
+      this.$router.go();
+    },
+  },
+
+  created() {
+    this.$i18n.locale = this.$store.state.user.locale;
+  },
+};
+</script>
+
+<style lang="scss">
+body {
+  overflow-x: hidden;
+}
+
+#app {
+  position: relative;
+}
+
+.navbar-brand a:first-child {
+  padding: 0 0 0 0.75rem;
+
+  img {
+    height: 52px;
+    max-height: unset;
+  }
+}
+</style>
