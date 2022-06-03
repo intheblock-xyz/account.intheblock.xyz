@@ -1,6 +1,11 @@
 <template>
   <div class="columns is-multiline">
-    <div class="column is-12">
+    <div class="column is-6">
+      <div class="buttons">
+        <b-button @click="newProject">New project</b-button>
+      </div>
+    </div>
+    <div class="column is-6">
       <div class="buttons is-right">
         <download-csv :data="toExport" :name="projectName + '.csv'">
           <b-button :disabled="!transfers.length">Export to .csv</b-button>
@@ -14,25 +19,46 @@
         <b-button @click="$refs.fileInput.click()">Import from .csv</b-button>
       </div>
     </div>
-    <div v-if="projectName" class="column is-12">
-      <h3 class="title is-3">{{ projectName }}</h3>
+    <div v-if="isProjectLoaded" class="column is-12">
+      <h3 class="title is-12">
+        <span v-if="isProjectNameEditing">
+          <b-field>
+            <b-input
+              v-model="projectName"
+              size="is-large"
+              ref="projectNameInput"
+              @keypress.native="projectNameEnterButtonHandler"
+            ></b-input>
+            <p class="control">
+              <b-button
+                icon-left="check"
+                size="is-large"
+                @click="disableProjectNameEditing"
+              />
+            </p>
+          </b-field>
+        </span>
+        <span v-else class="projectName" @click="enableProjectNameEditing">
+          {{ projectName || "[unnamed project]" }}
+        </span>
+      </h3>
       <ul>
         <li><b>ADA available:</b> {{ $n(adaAvailable) }}</li>
         <li><b>ADA received:</b> {{ $n(adaReceived) }}</li>
         <li><b>ADA sent:</b> {{ $n(Math.abs(adaSent)) }}</li>
         <li>
           <b>Current ADA/USD rate:</b>
+          {{ currentRate ? $n(currentRate) : "refreshing..." }}
           <b-button
             type="is-ghost"
             icon-left="refresh"
             :loading="!currentRate"
             @click="loadCurrentRate"
           ></b-button>
-          {{ currentRate ? $n(currentRate) : "refreshing..." }}
         </li>
       </ul>
     </div>
-    <div v-if="projectName" class="column is-12">
+    <div v-if="isProjectLoaded" class="column is-12">
       <div v-if="isFormVisible" class="box columns is-multiline">
         <b-field label="Date" class="column is-3">
           <b-datepicker
@@ -74,15 +100,49 @@
           ></b-input>
         </b-field>
 
-        <b-field label="Label" class="column is-3">
+        <b-field label="Labels" class="column is-3">
+          <b-dropdown v-model="formLabels" multiple aria-role="list">
+            <template #trigger>
+              <b-button expanded icon-right="menu-down">
+                <span v-if="formLabels.length">
+                  {{ formLabels.length }} item{{
+                    formLabels.length > 1 ? "s" : ""
+                  }}
+                  selected
+                </span>
+                <span v-else> No labels selected </span>
+              </b-button>
+            </template>
+
+            <b-dropdown-item
+              v-for="label in labelsDropdownItems"
+              v-bind:key="label"
+              :value="label"
+              aria-role="listitem"
+            >
+              <span>{{ label }}</span>
+            </b-dropdown-item>
+          </b-dropdown>
+        </b-field>
+
+        <b-field
+          class="column is-3"
+          v-for="label in formLabels"
+          v-bind:key="label"
+          :label="label"
+        >
           <b-input
-            v-model="formData.label"
+            v-model="formData.labels[label]"
             @keypress.native="enterButtonHandler"
           ></b-input>
         </b-field>
 
         <div class="buttons column is-12">
-          <b-button v-if="isFormUpdate" type="is-primary" @click="submitUpdate"
+          <b-button
+            v-if="isFormUpdate"
+            type="is-primary"
+            icon-left="check"
+            @click="submitUpdate"
             >Save</b-button
           >
           <b-button
@@ -114,7 +174,7 @@
         >
       </div>
     </div>
-    <div v-if="projectName" class="column is-12">
+    <div v-if="isProjectLoaded" class="column is-12">
       <b-table
         checkable
         checkbox-position="left"
@@ -125,6 +185,7 @@
         pagination-size="is-small"
         pagination-simple
         per-page="10"
+        detailed
         :data="transfers"
         :checked-rows.sync="transfersChecked"
       >
@@ -186,7 +247,7 @@
           width="240"
           sortable
         >
-          {{ props.row.label }}
+          {{ getLabelValue("Label", props.row.labels) || "&ndash;" }}
         </b-table-column>
 
         <b-table-column custom-key="actions" v-slot="props" width="70">
@@ -205,9 +266,20 @@
           </div>
         </b-table-column>
 
+        <template #detail="props">
+          <ul v-if="props.row.labels.length">
+            <li v-for="label in props.row.labels" v-bind:key="label.title">
+              <strong>{{ label.title }}</strong
+              >:{{ " " }}{{ label.value }}
+            </li>
+          </ul>
+          <div v-else>No labels</div>
+        </template>
+
         <template #empty>
           <div class="has-text-centered">No transfers</div>
         </template>
+
         <template #bottom-left>
           <b>Total transfers</b>: {{ transfers.length }}
         </template>
@@ -244,36 +316,50 @@ function normalizeTransfersFromJSON(transfers) {
     }));
 }
 
-function normalizeTransfersFromCSV(csvArray) {
-  let balance = 0;
-  return csvArray.slice(1).map((tArr) => ({
-    id: tArr[0],
-    date: new Date(parseInt(tArr[1], 10)),
-    amountIn: parseFloat(tArr[2]),
-    amountOut: parseFloat(tArr[3]),
-    balance: tArr[2]
-      ? (balance += parseFloat(tArr[2]))
-      : (balance -= parseFloat(tArr[3])),
-    rate: parseFloat(tArr[4]),
-    label: tArr[5],
-  }));
+function normalizeTransfersFromCSV(csvArray, labelsDropdownItems) {
+  return csvArray.slice(1).map((tArr) => {
+    const labels = [];
+    tArr.slice(6).map((value, idx) => {
+      if (value) {
+        labels.push({ title: labelsDropdownItems[idx], value });
+      }
+    });
+    return {
+      id: tArr[0],
+      date: new Date(tArr[1]),
+      amountIn: parseFloat(tArr[2]),
+      amountOut: parseFloat(tArr[3]),
+      balance: parseFloat(tArr[4]),
+      rate: parseFloat(tArr[5]),
+      labels,
+    };
+  });
 }
 
 function initialFormData(initials = {}) {
   const rate = initials.rate || 1;
   const amount = initials.amountIn || initials.amountOut || null;
   const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount;
+  const labels = initials.labels
+    ? Object.fromEntries(
+        initials.labels.map(({ title, value }) => [title, value])
+      )
+    : { Label: "" };
   return {
     id: initials.id || null,
     date: initials.date ? new Date(initials.date) : new Date(),
     amount,
     amountUSD,
     rate,
-    label: initials.label || "",
+    labels,
   };
 }
 
-function normalizeFormData(formData, direction) {
+function normalizeFormData(formData, formLabels, direction) {
+  const labels = formLabels.map((title) => ({
+    title,
+    value: formData.labels[title] || "",
+  }));
   return {
     ...formData,
     id: formData.id || Date.now().toString(),
@@ -285,18 +371,46 @@ function normalizeFormData(formData, direction) {
         ? parseFloat(formData.amount || formData.amountOut)
         : 0,
     rate: parseFloat(formData.rate),
+    labels,
   };
+}
+
+function dataToExport(transfers, labelsDropdownItems) {
+  return transfers.map((transfer) => {
+    const labels = {};
+    labelsDropdownItems.forEach((title) => {
+      const label = transfer.labels.find((l) => l.title === title);
+      labels[`label_${title}`] = label ? label.value : "";
+    });
+    const date =
+      typeof transfer.date === "number"
+        ? new Date(transfer.date)
+        : transfer.date;
+    return {
+      id: transfer.id,
+      date: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
+      amountIn: transfer.amountIn,
+      amountOut: transfer.amountOut,
+      balance: transfer.balance,
+      rate: transfer.rate,
+      ...labels,
+    };
+  });
 }
 
 export default {
   data() {
     return {
       projectName: "",
+      isProjectLoaded: false,
       transfers: [],
       transfersChecked: [],
       currentRate: null,
       isFormVisible: false,
+      isProjectNameEditing: false,
       formData: initialFormData(),
+      formLabels: ["Label"],
+      labelsDropdownItems: ["Label", "Name", "E-mail", "Other"],
       coinGeckoAPI: Object.freeze(new CoinGeckoAPI()),
     };
   },
@@ -321,9 +435,7 @@ export default {
     },
 
     toExport() {
-      return this.transfers.map((transfer) =>
-        normalizeFormData(transfer, transfer.amountIn ? "in" : "out")
-      );
+      return dataToExport(this.transfers, this.labelsDropdownItems);
     },
   },
 
@@ -331,6 +443,7 @@ export default {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
         this.projectName = r.data.name;
+        this.isProjectLoaded = true;
         this.transfers = normalizeTransfersFromJSON(r.data.transfers);
       });
     },
@@ -349,7 +462,11 @@ export default {
           },
           complete: ({ data }) => {
             this.projectName = projectName;
-            this.transfers = normalizeTransfersFromCSV(data);
+            this.transfers = normalizeTransfersFromCSV(
+              data,
+              this.labelsDropdownItems
+            );
+            console.log(this.transfers);
           },
         });
       }
@@ -378,8 +495,39 @@ export default {
       }
     },
 
+    newProject() {
+      this.projectName = "New project";
+      this.isProjectLoaded = true;
+      this.transfers = [];
+      this.transfersChecked = [];
+      this.isFormVisible = false;
+      this.isProjectNameEditing = false;
+      this.formData = initialFormData();
+      this.formLabels = ["Label"];
+      this.loadCurrentRate();
+    },
+
+    enableProjectNameEditing() {
+      this.isProjectNameEditing = true;
+      this.$nextTick(() => {
+        this.$refs.projectNameInput.focus();
+      });
+    },
+
+    disableProjectNameEditing() {
+      this.isProjectNameEditing = false;
+    },
+
+    projectNameEnterButtonHandler(e) {
+      if (this.isProjectNameEditing && e.keyCode === 13) {
+        this.disableProjectNameEditing();
+      }
+    },
+
     transferAdd(direction) {
-      this.transfers.push(normalizeFormData(this.formData, direction));
+      this.transfers.push(
+        normalizeFormData(this.formData, this.formLabels, direction)
+      );
     },
 
     transferEdit() {
@@ -389,7 +537,7 @@ export default {
         this.transfers.splice(
           tIndex,
           1,
-          normalizeFormData(this.formData, direction)
+          normalizeFormData(this.formData, this.formLabels, direction)
         );
       }
     },
@@ -398,6 +546,19 @@ export default {
       this.transfers = this.transfers.filter(idIsNot(row.id));
       this.transfersChecked = this.transfersChecked.filter(idIsNot(row.id));
       this.adjustBalance();
+    },
+
+    getLabelValue(title, labels) {
+      let value;
+      if (labels) {
+        const label = labels.find((l) => l.title === title);
+        if (label) {
+          return label.value;
+        }
+      } else {
+        value = this.formData.labels[title];
+      }
+      return value || "";
     },
 
     adjustBalance() {
@@ -412,6 +573,7 @@ export default {
 
     transferToForm(row) {
       this.formData = initialFormData(row);
+      this.formLabels = row.labels.map((l) => l.title);
       this.showForm();
     },
 
@@ -426,6 +588,7 @@ export default {
 
     resetForm() {
       this.formData = initialFormData({ rate: this.currentRate || 1 });
+      this.formLabels = ["Label"];
     },
 
     adjustTransferAmountFromAda(e) {
@@ -465,15 +628,19 @@ export default {
     },
 
     submitAddSent() {
-      this.transferAdd("out");
+      if (this.formData.amount) {
+        this.transferAdd("out");
+        this.adjustBalance();
+      }
       this.hideForm();
-      this.adjustBalance();
     },
 
     submitAddReceive() {
-      this.transferAdd("in");
+      if (this.formData.amount) {
+        this.transferAdd("in");
+        this.adjustBalance();
+      }
       this.hideForm();
-      this.adjustBalance();
     },
 
     makePayment() {
@@ -489,13 +656,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+h3 span.projectName {
+  cursor: pointer;
+}
+
 input[type="file"] {
   display: none;
 }
 
 ul li button {
   padding: 0;
-  margin: 0 6px 0 8px;
+  margin: 0 8px 0 4px;
   height: 17px;
   vertical-align: baseline;
 }
