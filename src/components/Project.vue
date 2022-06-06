@@ -241,18 +241,14 @@
         </b-table-column>
 
         <b-table-column
-          :label="labelTitles[0] || defaultLabelTitle"
+          :label="label"
           custom-key="label"
           v-slot="props"
+          v-for="label in labelTitles"
+          v-bind:key="label"
           width="240"
-          sortable
         >
-          {{
-            getLabelValue(
-              labelTitles[0] || defaultLabelTitle,
-              props.row.labels
-            ) || "&ndash;"
-          }}
+          {{ getLabelValue(label, props.row.labels) || "&ndash;" }}
         </b-table-column>
 
         <b-table-column custom-key="actions" v-slot="props" width="70">
