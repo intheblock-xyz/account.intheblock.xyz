@@ -115,7 +115,7 @@
             </template>
 
             <b-dropdown-item
-              v-for="label in labelsDropdownItems"
+              v-for="label in labelTitles"
               v-bind:key="label"
               :value="label"
               aria-role="listitem"
@@ -241,13 +241,18 @@
         </b-table-column>
 
         <b-table-column
-          field="label"
-          label="Label"
+          :label="labelTitles[0] || defaultLabelTitle"
+          custom-key="label"
           v-slot="props"
           width="240"
           sortable
         >
-          {{ getLabelValue("Label", props.row.labels) || "&ndash;" }}
+          {{
+            getLabelValue(
+              labelTitles[0] || defaultLabelTitle,
+              props.row.labels
+            ) || "&ndash;"
+          }}
         </b-table-column>
 
         <b-table-column custom-key="actions" v-slot="props" width="70">
@@ -316,12 +321,30 @@ function normalizeTransfersFromJSON(transfers) {
     }));
 }
 
-function normalizeTransfersFromCSV(csvArray, labelsDropdownItems) {
+function labelTitlesFromTransfers(transfers) {
+  const allLabelTitles = transfers.map((transfer) =>
+    transfer.labels.map(({ title }) => title)
+  );
+  return allLabelTitles.reduce((acc, cur) => {
+    cur.forEach((title) => {
+      if (!acc.includes(title)) {
+        acc.push(title);
+      }
+    });
+    return acc;
+  }, []);
+}
+
+function normalizeTransfersFromCSV(csvArray) {
+  const columnNames = csvArray[0];
+  const labelTitles = columnNames
+    .slice(6)
+    .map((name) => name.split("label_")[1]);
   return csvArray.slice(1).map((tArr) => {
     const labels = [];
     tArr.slice(6).map((value, idx) => {
       if (value) {
-        labels.push({ title: labelsDropdownItems[idx], value });
+        labels.push({ title: labelTitles[idx], value });
       }
     });
     return {
@@ -344,7 +367,7 @@ function initialFormData(initials = {}) {
     ? Object.fromEntries(
         initials.labels.map(({ title, value }) => [title, value])
       )
-    : { Label: "" };
+    : {};
   return {
     id: initials.id || null,
     date: initials.date ? new Date(initials.date) : new Date(),
@@ -375,10 +398,10 @@ function normalizeFormData(formData, formLabels, direction) {
   };
 }
 
-function dataToExport(transfers, labelsDropdownItems) {
+function dataToExport(transfers, labelTitles) {
   return transfers.map((transfer) => {
     const labels = {};
-    labelsDropdownItems.forEach((title) => {
+    labelTitles.forEach((title) => {
       const label = transfer.labels.find((l) => l.title === title);
       labels[`label_${title}`] = label ? label.value : "";
     });
@@ -409,8 +432,9 @@ export default {
       isFormVisible: false,
       isProjectNameEditing: false,
       formData: initialFormData(),
-      formLabels: ["Label"],
-      labelsDropdownItems: ["Label", "Name", "E-mail", "Other"],
+      formLabels: [],
+      labelTitles: [],
+      defaultLabelTitle: "",
       coinGeckoAPI: Object.freeze(new CoinGeckoAPI()),
     };
   },
@@ -435,7 +459,7 @@ export default {
     },
 
     toExport() {
-      return dataToExport(this.transfers, this.labelsDropdownItems);
+      return dataToExport(this.transfers, this.labelTitles);
     },
   },
 
@@ -443,8 +467,14 @@ export default {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
         this.projectName = r.data.name;
-        this.isProjectLoaded = true;
+        this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
+        this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
+        this.defaultLabelTitle = this.labelTitles[0] || "Label";
+        this.transfersChecked = [];
+        this.isFormVisible = false;
+        this.isProjectNameEditing = false;
         this.transfers = normalizeTransfersFromJSON(r.data.transfers);
+        this.isProjectLoaded = true;
       });
     },
 
@@ -462,11 +492,14 @@ export default {
           },
           complete: ({ data }) => {
             this.projectName = projectName;
-            this.transfers = normalizeTransfersFromCSV(
-              data,
-              this.labelsDropdownItems
-            );
-            console.log(this.transfers);
+            this.transfers = normalizeTransfersFromCSV(data);
+            this.labelTitles = labelTitlesFromTransfers(this.transfers);
+            this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
+            this.defaultLabelTitle = this.labelTitles[0] || "Label";
+            this.transfersChecked = [];
+            this.isFormVisible = false;
+            this.isProjectNameEditing = false;
+            this.isProjectLoaded = true;
           },
         });
       }
@@ -503,7 +536,9 @@ export default {
       this.isFormVisible = false;
       this.isProjectNameEditing = false;
       this.formData = initialFormData();
-      this.formLabels = ["Label"];
+      this.labelTitles = ["Label"];
+      this.defaultLabelTitle = "Label";
+      this.formLabels = [this.defaultLabelTitle];
       this.loadCurrentRate();
     },
 
@@ -588,7 +623,7 @@ export default {
 
     resetForm() {
       this.formData = initialFormData({ rate: this.currentRate || 1 });
-      this.formLabels = ["Label"];
+      this.formLabels = [this.defaultLabelTitle];
     },
 
     adjustTransferAmountFromAda(e) {
