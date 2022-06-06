@@ -3,11 +3,31 @@
     <div class="column is-6">
       <div class="buttons">
         <b-button @click="newProject">New project</b-button>
+        <b-button @click="showPreferencesModal" icon-left="cog"></b-button>
+
+        <b-modal
+          v-model="isPreferencesModalActive"
+          has-modal-card
+          trap-focus
+          destroy-on-hide
+          aria-role="dialog"
+          aria-label="Project preferences modal"
+          close-button-aria-label="Close"
+          aria-modal
+        >
+          <template #default="props">
+            <preferences-modal
+              @close="props.close"
+              @submit="submitPreferencesForm"
+              :initials="{ projectName: preferences.projectName }"
+            ></preferences-modal>
+          </template>
+        </b-modal>
       </div>
     </div>
     <div class="column is-6">
       <div class="buttons is-right">
-        <download-csv :data="toExport" :name="projectName + '.csv'">
+        <download-csv :data="toExport" :name="preferences.projectName + '.csv'">
           <b-button :disabled="!transfers.length">Export to .csv</b-button>
         </download-csv>
         <input
@@ -24,7 +44,7 @@
         <span v-if="isProjectNameEditing">
           <b-field>
             <b-input
-              v-model="projectName"
+              v-model="preferences.projectName"
               size="is-large"
               ref="projectNameInput"
               @keypress.native="projectNameEnterButtonHandler"
@@ -39,7 +59,7 @@
           </b-field>
         </span>
         <span v-else class="projectName" @click="enableProjectNameEditing">
-          {{ projectName || "[unnamed project]" }}
+          {{ preferences.projectName || "[unnamed project]" }}
         </span>
       </h3>
       <ul>
@@ -294,6 +314,7 @@ import Papa from "papaparse";
 import CoinGeckoAPI from "coingecko-api";
 import { mapGetters } from "vuex";
 import ProjectAPI from "@/api/project.js";
+import PreferencesModal from "./PreferencesModal.vue";
 
 const idIs = (id) => (t) => t.id === id;
 const idIsNot = (id) => (t) => t.id !== id;
@@ -418,14 +439,19 @@ function dataToExport(transfers, labelTitles) {
 }
 
 export default {
+  components: { PreferencesModal },
+
   data() {
     return {
-      projectName: "",
+      preferences: {
+        projectName: "",
+      },
       isProjectLoaded: false,
       transfers: [],
       transfersChecked: [],
       currentRate: null,
       isFormVisible: false,
+      isPreferencesModalActive: false,
       isProjectNameEditing: false,
       formData: initialFormData(),
       formLabels: [],
@@ -462,7 +488,7 @@ export default {
   methods: {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
-        this.projectName = r.data.name;
+        this.preferences.projectName = r.data.name;
         this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
         this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
         this.defaultLabelTitle = this.labelTitles[0] || "Label";
@@ -487,7 +513,7 @@ export default {
             });
           },
           complete: ({ data }) => {
-            this.projectName = projectName;
+            this.preferences.projectName = projectName;
             this.transfers = normalizeTransfersFromCSV(data);
             this.labelTitles = labelTitlesFromTransfers(this.transfers);
             this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
@@ -525,7 +551,7 @@ export default {
     },
 
     newProject() {
-      this.projectName = "New project";
+      this.preferences.projectName = "New project";
       this.isProjectLoaded = true;
       this.transfers = [];
       this.transfersChecked = [];
@@ -536,6 +562,19 @@ export default {
       this.defaultLabelTitle = "Label";
       this.formLabels = [this.defaultLabelTitle];
       this.loadCurrentRate();
+    },
+
+    showPreferencesModal() {
+      this.isPreferencesModalActive = true;
+    },
+
+    hidePreferencesModal() {
+      this.isPreferencesModalActive = false;
+    },
+
+    submitPreferencesForm({ projectName }) {
+      this.preferences.projectName = projectName;
+      this.hidePreferencesModal();
     },
 
     enableProjectNameEditing() {
