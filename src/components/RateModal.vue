@@ -34,6 +34,31 @@
           </b-input>
         </b-field>
       </div>
+      <div class="columns">
+        <b-field label="Transfers" class="column is-3" v-if="transfers.length">
+          <b-dropdown multiple v-model="transfersSelected" aria-role="list">
+            <template #trigger>
+              <b-button
+                expanded
+                icon-right="menu-down"
+                :label="`Incoming transfers (${transfersSelected.length} selected)`"
+              ></b-button>
+            </template>
+
+            <b-dropdown-item
+              v-for="transfer in transfers"
+              v-bind:key="transfer.id"
+              :value="transfer.id"
+              aria-role="listitem"
+            >
+              <span
+                >{{ $d(transfer.date, "short") }} / ₳{{ transfer.amount }} /
+                {{ transfer.rate }}</span
+              >
+            </b-dropdown-item>
+          </b-dropdown>
+        </b-field>
+      </div>
     </section>
     <footer class="modal-card-foot">
       <b-button
@@ -77,6 +102,7 @@ export default {
     );
     return {
       transfers,
+      transfersSelected: [],
       finalRate: this.currentRate,
       adaAmount: this.initialAdaAmount,
       usdAmount: this.initialUsdAmount,
