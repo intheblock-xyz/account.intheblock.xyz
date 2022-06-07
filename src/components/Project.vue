@@ -19,7 +19,7 @@
             <preferences-modal
               @close="props.close"
               @submit="submitPreferencesForm"
-              :initials="{ projectName: preferences.projectName }"
+              :initials="{ projectName: projectName, labelTitles }"
             ></preferences-modal>
           </template>
         </b-modal>
@@ -27,7 +27,7 @@
     </div>
     <div class="column is-6">
       <div class="buttons is-right">
-        <download-csv :data="toExport" :name="preferences.projectName + '.csv'">
+        <download-csv :data="toExport" :name="projectName + '.csv'">
           <b-button :disabled="!transfers.length">Export to .csv</b-button>
         </download-csv>
         <input
@@ -44,7 +44,7 @@
         <span v-if="isProjectNameEditing">
           <b-field>
             <b-input
-              v-model="preferences.projectName"
+              v-model="projectName"
               size="is-large"
               ref="projectNameInput"
               @keypress.native="projectNameEnterButtonHandler"
@@ -59,7 +59,7 @@
           </b-field>
         </span>
         <span v-else class="projectName" @click="enableProjectNameEditing">
-          {{ preferences.projectName || "[unnamed project]" }}
+          {{ projectName || "[unnamed project]" }}
         </span>
       </h3>
       <ul>
@@ -120,7 +120,7 @@
           ></b-input>
         </b-field>
 
-        <b-field label="Labels" class="column is-3">
+        <b-field label="Labels" class="column is-3" v-if="labelTitles.length">
           <b-dropdown v-model="formLabels" multiple aria-role="list">
             <template #trigger>
               <b-button expanded icon-right="menu-down">
@@ -443,9 +443,7 @@ export default {
 
   data() {
     return {
-      preferences: {
-        projectName: "",
-      },
+      projectName: "",
       isProjectLoaded: false,
       transfers: [],
       transfersChecked: [],
@@ -488,10 +486,10 @@ export default {
   methods: {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
-        this.preferences.projectName = r.data.name;
+        this.projectName = r.data.name;
         this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
         this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
-        this.defaultLabelTitle = this.labelTitles[0] || "Label";
+        this.defaultLabelTitle = this.labelTitles[0];
         this.transfersChecked = [];
         this.isFormVisible = false;
         this.isProjectNameEditing = false;
@@ -513,11 +511,11 @@ export default {
             });
           },
           complete: ({ data }) => {
-            this.preferences.projectName = projectName;
+            this.projectName = projectName;
             this.transfers = normalizeTransfersFromCSV(data);
             this.labelTitles = labelTitlesFromTransfers(this.transfers);
             this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
-            this.defaultLabelTitle = this.labelTitles[0] || "Label";
+            this.defaultLabelTitle = this.labelTitles[0];
             this.transfersChecked = [];
             this.isFormVisible = false;
             this.isProjectNameEditing = false;
@@ -551,7 +549,7 @@ export default {
     },
 
     newProject() {
-      this.preferences.projectName = "New project";
+      this.projectName = "New project";
       this.isProjectLoaded = true;
       this.transfers = [];
       this.transfersChecked = [];
@@ -565,6 +563,8 @@ export default {
     },
 
     showPreferencesModal() {
+      this.isProjectNameEditing = false;
+      this.isFormVisible = false;
       this.isPreferencesModalActive = true;
     },
 
@@ -572,8 +572,44 @@ export default {
       this.isPreferencesModalActive = false;
     },
 
-    submitPreferencesForm({ projectName }) {
-      this.preferences.projectName = projectName;
+    submitPreferencesForm({ projectName, labelTitles, labelTitlesOrder }) {
+      this.projectName = projectName;
+      const updatedTransfers = [];
+      const updatedLabelTitles = [];
+      const renamedLabels = [];
+      const labelRenames = {};
+      const newLabelTitles = labelTitlesOrder.filter(
+        (title) => !this.labelTitles.includes(title)
+      );
+      const removedLabels = this.labelTitles.filter(
+        (title) => !labelTitlesOrder.includes(title)
+      );
+      labelTitlesOrder.forEach((key) => {
+        if (labelTitles[key]) {
+          updatedLabelTitles.push(labelTitles[key]);
+          if (key !== labelTitles[key]) {
+            if (!newLabelTitles.includes(key)) {
+              renamedLabels.push(key);
+              labelRenames[key] = labelTitles[key];
+            }
+          }
+        }
+      });
+      for (const transfer of this.transfers) {
+        const labels = [];
+        for (const label of transfer.labels) {
+          if (renamedLabels.includes(label.title)) {
+            labels.push({ ...label, title: labelRenames[label.title] });
+          } else if (!removedLabels.includes(label.title)) {
+            labels.push({ ...label });
+          }
+        }
+        updatedTransfers.push({ ...transfer, labels });
+      }
+      this.labelTitles = updatedLabelTitles;
+      this.transfers = updatedTransfers;
+      this.formLabels = [...this.labelTitles];
+      this.defaultLabelTitle = this.formLabels[0];
       this.hidePreferencesModal();
     },
 

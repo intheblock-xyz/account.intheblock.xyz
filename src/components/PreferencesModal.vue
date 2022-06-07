@@ -8,11 +8,30 @@
       <b-field label="Project name">
         <b-input v-model="projectName" required> </b-input>
       </b-field>
+      <h5 class="title is-5">Labels set</h5>
+      <div v-for="labelTitle in labelTitlesOrder" v-bind:key="labelTitle">
+        <b-field>
+          <b-input v-model="labelTitles[labelTitle]" required> </b-input>
+          <p class="control">
+            <b-button
+              type="is-danger is-light"
+              icon-left="delete-outline"
+              @click="labelRemove(labelTitle)"
+            />
+          </p>
+        </b-field>
+      </div>
+      <b-button
+        type="is-primary"
+        icon-left="plus"
+        label="Add label"
+        @click="labelAdd"
+      />
     </section>
     <footer class="modal-card-foot">
       <b-button
         label="OK"
-        @click="$emit('submit', { projectName })"
+        @click="$emit('submit', { projectName, labelTitles, labelTitlesOrder })"
         type="is-primary"
       />
       <b-button label="Close" @click="$emit('close')" />
@@ -25,7 +44,30 @@ export default {
   props: ["initials"],
 
   data() {
-    return { projectName: this.initials.projectName };
+    const labelTitles = {};
+    const labelTitlesOrder = [];
+    this.initials.labelTitles.forEach((title) => {
+      labelTitles[title] = title;
+      labelTitlesOrder.push(title);
+    });
+    return {
+      projectName: this.initials.projectName,
+      labelTitles,
+      labelTitlesOrder,
+    };
+  },
+
+  methods: {
+    labelAdd() {
+      const key = Date.now().toString();
+      this.labelTitles[key] = "";
+      this.labelTitlesOrder.push(key);
+    },
+
+    labelRemove(key) {
+      delete this.labelTitles[key];
+      this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1);
+    },
   },
 };
 </script>
