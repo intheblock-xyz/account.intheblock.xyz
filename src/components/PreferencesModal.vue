@@ -21,20 +21,16 @@
           </p>
         </b-field>
       </div>
-      <b-button
-        type="is-primary"
-        icon-left="plus"
-        label="Add label"
-        @click="labelAdd"
-      />
+      <b-button icon-left="plus" label="Add label" @click="labelAdd" />
     </section>
     <footer class="modal-card-foot">
       <b-button
-        label="OK"
+        icon-left="check"
+        label="Apply"
         @click="$emit('submit', { projectName, labelTitles, labelTitlesOrder })"
         type="is-primary"
       />
-      <b-button label="Close" @click="$emit('close')" />
+      <b-button label="Cancel" @click="$emit('close')" />
     </footer>
   </div>
 </template>

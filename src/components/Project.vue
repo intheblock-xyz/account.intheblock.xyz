@@ -116,6 +116,7 @@
             step="0.000000000000001"
             required
             v-model="formData.rate"
+            @keyup.native="adjustTransferAmountsFromRate"
             @keypress.native="enterButtonHandler"
           ></b-input>
           <p class="control" v-if="!isFormUpdate">
@@ -124,6 +125,7 @@
           <b-modal
             v-if="!isFormUpdate"
             v-model="isRateModalActive"
+            full-screen
             has-modal-card
             trap-focus
             destroy-on-hide
@@ -137,7 +139,10 @@
                 @close="props.close"
                 @submit="submitRateForm"
                 :initialTransfers="transfers"
-                :currentRate="currentRate"
+                :currentRate="formData.rate"
+                :initialAdaAmount="formData.amount"
+                :initialUsdAmount="formData.amountUSD"
+                :initialLastTouchedAmount="lastTouchedAmount"
               ></rate-modal>
             </template>
           </b-modal>
@@ -466,6 +471,7 @@ export default {
       isProjectLoaded: false,
       transfers: [],
       currentRate: null,
+      lastTouchedAmount: "ada",
       isFormVisible: false,
       isPreferencesModalActive: false,
       isRateModalActive: false,
@@ -637,8 +643,12 @@ export default {
       this.isRateModalActive = false;
     },
 
-    submitRateForm({ finalRate }) {
-      console.log(finalRate);
+    submitRateForm({ finalRate, adaAmount, usdAmount, lastTouchedAmount }) {
+      this.lastTouchedAmount = lastTouchedAmount;
+      this.formData.rate = finalRate;
+      this.formData.amount = adaAmount;
+      this.formData.amountUSD = usdAmount;
+      this.hideRateModal();
     },
 
     enableProjectNameEditing() {
@@ -734,6 +744,7 @@ export default {
         amountUSD = parseFloat((parseFloat(value) * rate).toFixed(2));
       }
       this.formData.amountUSD = amountUSD.toString();
+      this.lastTouchedAmount = "ada";
     },
 
     adjustTransferAmountFromUSD(e) {
@@ -746,6 +757,32 @@ export default {
         amount = parseFloat((parseFloat(value) / rate).toFixed(2));
       }
       this.formData.amount = amount.toString();
+      this.lastTouchedAmount = "usd";
+    },
+
+    adjustTransferAmountsFromRate(e) {
+      const rate = parseFloat(e.target.value);
+      if (rate) {
+        if (this.lastTouchedAmount === "ada") {
+          const adaAmount = parseFloat(this.formData.amount);
+          let usdAmount = "";
+          if (adaAmount === 0) {
+            usdAmount = 0;
+          } else if (adaAmount) {
+            usdAmount = parseFloat((parseFloat(adaAmount) * rate).toFixed(2));
+          }
+          this.formData.amountUSD = usdAmount.toString();
+        } else {
+          const usdAmount = parseFloat(this.formData.amountUSD);
+          let adaAmount = "";
+          if (usdAmount === 0) {
+            adaAmount = 0;
+          } else if (usdAmount) {
+            adaAmount = parseFloat((parseFloat(usdAmount) / rate).toFixed(2));
+          }
+          this.formData.amount = adaAmount.toString();
+        }
+      }
     },
 
     enterButtonHandler(e) {
