@@ -202,7 +202,6 @@
         pagination-size="is-small"
         pagination-simple
         per-page="10"
-        detailed
         :data="transfers"
       >
         <b-table-column
@@ -283,7 +282,7 @@
           </div>
         </b-table-column>
 
-        <template #detail="props">
+        <!-- <template #detail="props">
           <ul v-if="props.row.labels.length">
             <li v-for="label in props.row.labels" v-bind:key="label.title">
               <strong>{{ label.title }}</strong
@@ -291,7 +290,7 @@
             </li>
           </ul>
           <div v-else>No labels</div>
-        </template>
+        </template> -->
 
         <template #empty>
           <div class="has-text-centered">No transfers</div>
