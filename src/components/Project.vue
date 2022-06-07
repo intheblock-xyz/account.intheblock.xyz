@@ -209,7 +209,7 @@
           field="date"
           label="Date"
           v-slot="props"
-          width="240"
+          width="205"
           sortable
         >
           {{ $d(props.row.date, "short") }}
