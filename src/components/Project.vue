@@ -118,6 +118,29 @@
             v-model="formData.rate"
             @keypress.native="enterButtonHandler"
           ></b-input>
+          <p class="control" v-if="!isFormUpdate">
+            <b-button icon-left="alarm-panel" @click="showRateModal"></b-button>
+          </p>
+          <b-modal
+            v-if="!isFormUpdate"
+            v-model="isRateModalActive"
+            has-modal-card
+            trap-focus
+            destroy-on-hide
+            aria-role="dialog"
+            aria-label="Rate calculation modal"
+            close-button-aria-label="Close"
+            aria-modal
+          >
+            <template #default="props">
+              <rate-modal
+                @close="props.close"
+                @submit="submitRateForm"
+                :initialTransfers="transfers"
+                :currentRate="currentRate"
+              ></rate-modal>
+            </template>
+          </b-modal>
         </b-field>
 
         <b-field label="Labels" class="column is-3" v-if="labelTitles.length">
@@ -310,6 +333,7 @@ import CoinGeckoAPI from "coingecko-api";
 import { mapGetters } from "vuex";
 import ProjectAPI from "@/api/project.js";
 import PreferencesModal from "./PreferencesModal.vue";
+import RateModal from "./RateModal.vue";
 
 const idIs = (id) => (t) => t.id === id;
 const idIsNot = (id) => (t) => t.id !== id;
@@ -434,7 +458,7 @@ function dataToExport(transfers, labelTitles) {
 }
 
 export default {
-  components: { PreferencesModal },
+  components: { PreferencesModal, RateModal },
 
   data() {
     return {
@@ -444,6 +468,7 @@ export default {
       currentRate: null,
       isFormVisible: false,
       isPreferencesModalActive: false,
+      isRateModalActive: false,
       isProjectNameEditing: false,
       formData: initialFormData(),
       formLabels: [],
@@ -602,6 +627,18 @@ export default {
       this.formLabels = [...this.labelTitles];
       this.defaultLabelTitle = this.formLabels[0];
       this.hidePreferencesModal();
+    },
+
+    showRateModal() {
+      this.isRateModalActive = true;
+    },
+
+    hideRateModal() {
+      this.isRateModalActive = false;
+    },
+
+    submitRateForm({ finalRate }) {
+      console.log(finalRate);
     },
 
     enableProjectNameEditing() {
