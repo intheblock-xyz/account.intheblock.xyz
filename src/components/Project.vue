@@ -196,9 +196,6 @@
     </div>
     <div v-if="isProjectLoaded" class="column is-12">
       <b-table
-        checkable
-        checkbox-position="left"
-        checkbox-type="is-primary"
         default-sort="date"
         default-sort-direction="desc"
         paginated
@@ -207,7 +204,6 @@
         per-page="10"
         detailed
         :data="transfers"
-        :checked-rows.sync="transfersChecked"
       >
         <b-table-column
           field="date"
@@ -446,7 +442,6 @@ export default {
       projectName: "",
       isProjectLoaded: false,
       transfers: [],
-      transfersChecked: [],
       currentRate: null,
       isFormVisible: false,
       isPreferencesModalActive: false,
@@ -490,7 +485,6 @@ export default {
         this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
         this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
         this.defaultLabelTitle = this.labelTitles[0];
-        this.transfersChecked = [];
         this.isFormVisible = false;
         this.isProjectNameEditing = false;
         this.transfers = normalizeTransfersFromJSON(r.data.transfers);
@@ -516,7 +510,6 @@ export default {
             this.labelTitles = labelTitlesFromTransfers(this.transfers);
             this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
             this.defaultLabelTitle = this.labelTitles[0];
-            this.transfersChecked = [];
             this.isFormVisible = false;
             this.isProjectNameEditing = false;
             this.isProjectLoaded = true;
@@ -552,7 +545,6 @@ export default {
       this.projectName = "New project";
       this.isProjectLoaded = true;
       this.transfers = [];
-      this.transfersChecked = [];
       this.isFormVisible = false;
       this.isProjectNameEditing = false;
       this.formData = initialFormData();
@@ -650,7 +642,6 @@ export default {
 
     transferRemove(row) {
       this.transfers = this.transfers.filter(idIsNot(row.id));
-      this.transfersChecked = this.transfersChecked.filter(idIsNot(row.id));
       this.adjustBalance();
     },
 
