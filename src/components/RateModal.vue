@@ -142,6 +142,19 @@
             </p>
           </b-field>
         </div>
+
+        <div class="columns">
+          <b-field class="column is-1 is-offset-11">
+            <p class="control">
+              <b-button
+                type="is-success is-light"
+                expanded
+                icon-left="plus"
+                @click="addCustomRow"
+              />
+            </p>
+          </b-field>
+        </div>
       </div>
       <div class="columns">
         <b-field
