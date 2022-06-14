@@ -19,7 +19,7 @@
             <preferences-modal
               @close="props.close"
               @submit="submitPreferencesForm"
-              :initials="{ projectName: projectName, labelTitles }"
+              :initials="{projectName: projectName, labelTitles}"
             ></preferences-modal>
           </template>
         </b-modal>
@@ -90,7 +90,7 @@
           ></b-datepicker>
         </b-field>
 
-        <b-field label="₳ Amount" class="column is-2">
+        <b-field label="₳ Amount" class="column is-3">
           <b-input
             type="number"
             step="0.01"
@@ -100,7 +100,7 @@
           ></b-input>
         </b-field>
 
-        <b-field label="$ Amount" class="column is-2">
+        <b-field label="$ Amount" class="column is-3">
           <b-input
             type="number"
             step="0.01"
@@ -110,7 +110,7 @@
           ></b-input>
         </b-field>
 
-        <b-field label="ADA/USD rate" class="column is-2">
+        <b-field label="ADA/USD rate" class="column is-3">
           <b-input
             type="number"
             step="0.000000000000001"
@@ -148,7 +148,7 @@
           </b-modal>
         </b-field>
 
-        <b-field label="Labels" class="column is-3" v-if="labelTitles.length">
+        <!-- <b-field label="Labels" class="column is-3" v-if="labelTitles.length">
           <b-dropdown v-model="formLabels" multiple aria-role="list">
             <template #trigger>
               <b-button expanded icon-right="menu-down">
@@ -171,11 +171,11 @@
               <span>{{ label }}</span>
             </b-dropdown-item>
           </b-dropdown>
-        </b-field>
+        </b-field> -->
 
         <b-field
           class="column is-3"
-          v-for="label in formLabels"
+          v-for="label in labelTitles"
           v-bind:key="label"
           :label="label"
         >
@@ -333,23 +333,23 @@
 </template>
 
 <script>
-import Papa from "papaparse";
-import CoinGeckoAPI from "coingecko-api";
-import { mapGetters } from "vuex";
-import ProjectAPI from "@/api/project.js";
-import PreferencesModal from "./PreferencesModal.vue";
-import RateModal from "./RateModal.vue";
+import Papa from "papaparse"
+import CoinGeckoAPI from "coingecko-api"
+import {mapGetters} from "vuex"
+import ProjectAPI from "@/api/project.js"
+import PreferencesModal from "./PreferencesModal.vue"
+import RateModal from "./RateModal.vue"
 
-const idIs = (id) => (t) => t.id === id;
-const idIsNot = (id) => (t) => t.id !== id;
+const idIs = (id) => (t) => t.id === id
+const idIsNot = (id) => (t) => t.id !== id
 
-const received = (t) => !!t.amountIn;
-const sent = (t) => !!t.amountOut;
+const received = (t) => !!t.amountIn
+const sent = (t) => !!t.amountOut
 
-const sum = (acc, { amountIn, amountOut }) => (acc += amountIn || amountOut);
+const sum = (acc, {amountIn, amountOut}) => (acc += amountIn || amountOut)
 
 function normalizeTransfersFromJSON(transfers) {
-  let balance = 0;
+  let balance = 0
   return transfers
     .sort((a, b) => a.date - b.date)
     .map((transfer) => ({
@@ -359,35 +359,35 @@ function normalizeTransfersFromJSON(transfers) {
         ? (balance += transfer.amountIn)
         : (balance -= transfer.amountOut),
       date: new Date(transfer.date),
-    }));
+    }))
 }
 
 function labelTitlesFromTransfers(transfers) {
   const allLabelTitles = transfers.map((transfer) =>
-    transfer.labels.map(({ title }) => title)
-  );
+    transfer.labels.map(({title}) => title)
+  )
   return allLabelTitles.reduce((acc, cur) => {
     cur.forEach((title) => {
       if (!acc.includes(title)) {
-        acc.push(title);
+        acc.push(title)
       }
-    });
-    return acc;
-  }, []);
+    })
+    return acc
+  }, [])
 }
 
 function normalizeTransfersFromCSV(csvArray) {
-  const columnNames = csvArray[0];
+  const columnNames = csvArray[0]
   const labelTitles = columnNames
     .slice(6)
-    .map((name) => name.split("label_")[1]);
+    .map((name) => name.split("label_")[1])
   return csvArray.slice(1).map((tArr) => {
-    const labels = [];
+    const labels = []
     tArr.slice(6).map((value, idx) => {
       if (value) {
-        labels.push({ title: labelTitles[idx], value });
+        labels.push({title: labelTitles[idx], value})
       }
-    });
+    })
     return {
       id: tArr[0],
       date: new Date(tArr[1]),
@@ -396,19 +396,19 @@ function normalizeTransfersFromCSV(csvArray) {
       balance: parseFloat(tArr[4]),
       rate: parseFloat(tArr[5]),
       labels,
-    };
-  });
+    }
+  })
 }
 
 function initialFormData(initials = {}) {
-  const rate = initials.rate || 1;
-  const amount = initials.amountIn || initials.amountOut || null;
-  const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount;
+  const rate = initials.rate || 1
+  const amount = initials.amountIn || initials.amountOut || null
+  const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount
   const labels = initials.labels
     ? Object.fromEntries(
-        initials.labels.map(({ title, value }) => [title, value])
+        initials.labels.map(({title, value}) => [title, value])
       )
-    : {};
+    : {}
   return {
     id: initials.id || null,
     date: initials.date ? new Date(initials.date) : new Date(),
@@ -416,14 +416,14 @@ function initialFormData(initials = {}) {
     amountUSD,
     rate,
     labels,
-  };
+  }
 }
 
 function normalizeFormData(formData, formLabels, direction) {
   const labels = formLabels.map((title) => ({
     title,
     value: formData.labels[title] || "",
-  }));
+  }))
   return {
     ...formData,
     id: formData.id || Date.now().toString(),
@@ -436,20 +436,20 @@ function normalizeFormData(formData, formLabels, direction) {
         : 0,
     rate: parseFloat(formData.rate),
     labels,
-  };
+  }
 }
 
 function dataToExport(transfers, labelTitles) {
   return transfers.map((transfer) => {
-    const labels = {};
+    const labels = {}
     labelTitles.forEach((title) => {
-      const label = transfer.labels.find((l) => l.title === title);
-      labels[`label_${title}`] = label ? label.value : "";
-    });
+      const label = transfer.labels.find((l) => l.title === title)
+      labels[`label_${title}`] = label ? label.value : ""
+    })
     const date =
       typeof transfer.date === "number"
         ? new Date(transfer.date)
-        : transfer.date;
+        : transfer.date
     return {
       id: transfer.id,
       date: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
@@ -458,12 +458,12 @@ function dataToExport(transfers, labelTitles) {
       balance: transfer.balance,
       rate: transfer.rate,
       ...labels,
-    };
-  });
+    }
+  })
 }
 
 export default {
-  components: { PreferencesModal, RateModal },
+  components: {PreferencesModal, RateModal},
 
   data() {
     return {
@@ -481,348 +481,348 @@ export default {
       labelTitles: [],
       defaultLabelTitle: "",
       coinGeckoAPI: Object.freeze(new CoinGeckoAPI()),
-    };
+    }
   },
 
   computed: {
     ...mapGetters("user", ["locale"]),
 
     isFormUpdate() {
-      return this.isFormVisible && !!this.formData.id;
+      return this.isFormVisible && !!this.formData.id
     },
 
     adaReceived() {
-      return this.transfers.filter(received).reduce(sum, 0);
+      return this.transfers.filter(received).reduce(sum, 0)
     },
 
     adaSent() {
-      return this.transfers.filter(sent).reduce(sum, 0);
+      return this.transfers.filter(sent).reduce(sum, 0)
     },
 
     adaAvailable() {
-      return this.adaReceived - this.adaSent;
+      return this.adaReceived - this.adaSent
     },
 
     toExport() {
-      return dataToExport(this.transfers, this.labelTitles);
+      return dataToExport(this.transfers, this.labelTitles)
     },
   },
 
   methods: {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
-        this.projectName = r.data.name;
-        this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
-        this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
-        this.defaultLabelTitle = this.labelTitles[0];
-        this.isFormVisible = false;
-        this.isProjectNameEditing = false;
-        this.transfers = normalizeTransfersFromJSON(r.data.transfers);
-        this.isProjectLoaded = true;
-      });
+        this.projectName = r.data.name
+        this.labelTitles = labelTitlesFromTransfers(r.data.transfers)
+        this.formLabels = this.labelTitles
+        this.defaultLabelTitle = this.labelTitles[0]
+        this.isFormVisible = false
+        this.isProjectNameEditing = false
+        this.transfers = normalizeTransfersFromJSON(r.data.transfers)
+        this.isProjectLoaded = true
+      })
     },
 
     loadFromFile(e) {
-      const file = e.target.files && e.target.files[0];
+      const file = e.target.files && e.target.files[0]
       if (file) {
-        const projectName = file.name.split(/.csv$/)[0];
+        const projectName = file.name.split(/.csv$/)[0]
         Papa.parse(file, {
           error: (error) => {
             this.$buefy.toast.open({
               message: `Error parsing the file: "${error}"`,
               type: "is-danger",
               duration: 3000,
-            });
+            })
           },
-          complete: ({ data }) => {
-            this.projectName = projectName;
-            this.transfers = normalizeTransfersFromCSV(data);
-            this.labelTitles = labelTitlesFromTransfers(this.transfers);
-            this.formLabels = this.labelTitles[0] ? [this.labelTitles[0]] : [];
-            this.defaultLabelTitle = this.labelTitles[0];
-            this.isFormVisible = false;
-            this.isProjectNameEditing = false;
-            this.isProjectLoaded = true;
+          complete: ({data}) => {
+            this.projectName = projectName
+            this.transfers = normalizeTransfersFromCSV(data)
+            this.labelTitles = labelTitlesFromTransfers(this.transfers)
+            this.formLabels = this.labelTitles
+            this.defaultLabelTitle = this.labelTitles[0]
+            this.isFormVisible = false
+            this.isProjectNameEditing = false
+            this.isProjectLoaded = true
           },
-        });
+        })
       }
     },
 
     loadCurrentRate() {
       if (process.env.NODE_ENV === "development") {
-        const rate = 0.5;
-        this.currentRate = rate;
+        const rate = 0.5
+        this.currentRate = rate
         if (!this.isFormVisible) {
-          this.formData.rate = rate;
+          this.formData.rate = rate
         }
       } else {
-        this.currentRate = null;
+        this.currentRate = null
         this.coinGeckoAPI.simple
-          .price({ ids: ["cardano"], vs_currencies: ["usd"] })
+          .price({ids: ["cardano"], vs_currencies: ["usd"]})
           .then((result) => {
             if (result.success) {
-              const rate = parseFloat(result.data.cardano.usd.toFixed(15));
-              this.currentRate = rate;
+              const rate = parseFloat(result.data.cardano.usd.toFixed(15))
+              this.currentRate = rate
               if (!this.isFormVisible) {
-                this.formData.rate = rate;
+                this.formData.rate = rate
               }
             }
-          });
+          })
       }
     },
 
     newProject() {
-      this.projectName = "New project";
-      this.isProjectLoaded = true;
-      this.transfers = [];
-      this.isFormVisible = false;
-      this.isProjectNameEditing = false;
-      this.formData = initialFormData();
-      this.labelTitles = ["Label"];
-      this.defaultLabelTitle = "Label";
-      this.formLabels = [this.defaultLabelTitle];
-      this.loadCurrentRate();
+      this.projectName = "New project"
+      this.isProjectLoaded = true
+      this.transfers = []
+      this.isFormVisible = false
+      this.isProjectNameEditing = false
+      this.formData = initialFormData()
+      this.labelTitles = ["Label"]
+      this.defaultLabelTitle = "Label"
+      this.formLabels = [this.defaultLabelTitle]
+      this.loadCurrentRate()
     },
 
     showPreferencesModal() {
-      this.isProjectNameEditing = false;
-      this.isFormVisible = false;
-      this.isPreferencesModalActive = true;
+      this.isProjectNameEditing = false
+      this.isFormVisible = false
+      this.isPreferencesModalActive = true
     },
 
     hidePreferencesModal() {
-      this.isPreferencesModalActive = false;
+      this.isPreferencesModalActive = false
     },
 
-    submitPreferencesForm({ projectName, labelTitles, labelTitlesOrder }) {
-      this.projectName = projectName;
-      const updatedTransfers = [];
-      const updatedLabelTitles = [];
-      const renamedLabels = [];
-      const labelRenames = {};
+    submitPreferencesForm({projectName, labelTitles, labelTitlesOrder}) {
+      this.projectName = projectName
+      const updatedTransfers = []
+      const updatedLabelTitles = []
+      const renamedLabels = []
+      const labelRenames = {}
       const newLabelTitles = labelTitlesOrder.filter(
         (title) => !this.labelTitles.includes(title)
-      );
+      )
       const removedLabels = this.labelTitles.filter(
         (title) => !labelTitlesOrder.includes(title)
-      );
+      )
       labelTitlesOrder.forEach((key) => {
         if (labelTitles[key]) {
-          updatedLabelTitles.push(labelTitles[key]);
+          updatedLabelTitles.push(labelTitles[key])
           if (key !== labelTitles[key]) {
             if (!newLabelTitles.includes(key)) {
-              renamedLabels.push(key);
-              labelRenames[key] = labelTitles[key];
+              renamedLabels.push(key)
+              labelRenames[key] = labelTitles[key]
             }
           }
         }
-      });
+      })
       for (const transfer of this.transfers) {
-        const labels = [];
+        const labels = []
         for (const label of transfer.labels) {
           if (renamedLabels.includes(label.title)) {
-            labels.push({ ...label, title: labelRenames[label.title] });
+            labels.push({...label, title: labelRenames[label.title]})
           } else if (!removedLabels.includes(label.title)) {
-            labels.push({ ...label });
+            labels.push({...label})
           }
         }
-        updatedTransfers.push({ ...transfer, labels });
+        updatedTransfers.push({...transfer, labels})
       }
-      this.labelTitles = updatedLabelTitles;
-      this.transfers = updatedTransfers;
-      this.formLabels = [...this.labelTitles];
-      this.defaultLabelTitle = this.formLabels[0];
-      this.hidePreferencesModal();
+      this.labelTitles = updatedLabelTitles
+      this.transfers = updatedTransfers
+      this.formLabels = [...this.labelTitles]
+      this.defaultLabelTitle = this.formLabels[0]
+      this.hidePreferencesModal()
     },
 
     showRateModal() {
-      this.isRateModalActive = true;
+      this.isRateModalActive = true
     },
 
     hideRateModal() {
-      this.isRateModalActive = false;
+      this.isRateModalActive = false
     },
 
-    submitRateForm({ finalRate, adaAmount, usdAmount, lastTouchedAmount }) {
-      this.lastTouchedAmount = lastTouchedAmount;
-      this.formData.rate = finalRate;
-      this.formData.amount = adaAmount;
-      this.formData.amountUSD = usdAmount;
-      this.hideRateModal();
+    submitRateForm({finalRate, adaAmount, usdAmount, lastTouchedAmount}) {
+      this.lastTouchedAmount = lastTouchedAmount
+      this.formData.rate = finalRate
+      this.formData.amount = adaAmount
+      this.formData.amountUSD = usdAmount
+      this.hideRateModal()
     },
 
     enableProjectNameEditing() {
-      this.isProjectNameEditing = true;
+      this.isProjectNameEditing = true
       this.$nextTick(() => {
-        this.$refs.projectNameInput.focus();
-      });
+        this.$refs.projectNameInput.focus()
+      })
     },
 
     disableProjectNameEditing() {
-      this.isProjectNameEditing = false;
+      this.isProjectNameEditing = false
     },
 
     projectNameEnterButtonHandler(e) {
       if (this.isProjectNameEditing && e.keyCode === 13) {
-        this.disableProjectNameEditing();
+        this.disableProjectNameEditing()
       }
     },
 
     transferAdd(direction) {
       this.transfers.push(
         normalizeFormData(this.formData, this.formLabels, direction)
-      );
+      )
     },
 
     transferEdit() {
       if (this.formData.id) {
-        const tIndex = this.transfers.findIndex(idIs(this.formData.id));
-        const direction = this.transfers[tIndex].amountIn ? "in" : "out";
+        const tIndex = this.transfers.findIndex(idIs(this.formData.id))
+        const direction = this.transfers[tIndex].amountIn ? "in" : "out"
         this.transfers.splice(
           tIndex,
           1,
           normalizeFormData(this.formData, this.formLabels, direction)
-        );
+        )
       }
     },
 
     transferRemove(row) {
-      this.transfers = this.transfers.filter(idIsNot(row.id));
-      this.adjustBalance();
+      this.transfers = this.transfers.filter(idIsNot(row.id))
+      this.adjustBalance()
     },
 
     getLabelValue(title, labels) {
-      let value;
+      let value
       if (labels) {
-        const label = labels.find((l) => l.title === title);
+        const label = labels.find((l) => l.title === title)
         if (label) {
-          return label.value;
+          return label.value
         }
       } else {
-        value = this.formData.labels[title];
+        value = this.formData.labels[title]
       }
-      return value || "";
+      return value || ""
     },
 
     adjustBalance() {
-      let balance = 0;
+      let balance = 0
       this.transfers = this.transfers.map((t) => ({
         ...t,
         balance: t.amountIn
           ? (balance += t.amountIn)
           : (balance -= t.amountOut),
-      }));
+      }))
     },
 
     transferToForm(row) {
-      this.formData = initialFormData(row);
-      this.formLabels = row.labels.map((l) => l.title);
-      this.showForm();
+      this.formData = initialFormData(row)
+      this.formLabels = [...this.labelTitles]
+      this.showForm()
     },
 
     showForm() {
-      this.isFormVisible = true;
+      this.isFormVisible = true
     },
 
     hideForm() {
-      this.isFormVisible = false;
-      this.resetForm();
+      this.isFormVisible = false
+      this.resetForm()
     },
 
     resetForm() {
-      this.formData = initialFormData({ rate: this.currentRate || 1 });
-      this.formLabels = [this.defaultLabelTitle];
+      this.formData = initialFormData({rate: this.currentRate || 1})
+      this.formLabels = [...this.labelTitles]
     },
 
     adjustTransferAmountFromAda(e) {
-      const rate = this.formData.rate || 1;
-      const value = parseFloat(e.target.value);
-      let amountUSD = "";
+      const rate = this.formData.rate || 1
+      const value = parseFloat(e.target.value)
+      let amountUSD = ""
       if (value === 0) {
-        amountUSD = 0;
+        amountUSD = 0
       } else if (value) {
-        amountUSD = parseFloat((parseFloat(value) * rate).toFixed(2));
+        amountUSD = parseFloat((parseFloat(value) * rate).toFixed(2))
       }
-      this.formData.amountUSD = amountUSD.toString();
-      this.lastTouchedAmount = "ada";
+      this.formData.amountUSD = amountUSD.toString()
+      this.lastTouchedAmount = "ada"
     },
 
     adjustTransferAmountFromUSD(e) {
-      const rate = this.formData.rate || 1;
-      const value = parseFloat(e.target.value);
-      let amount = "";
+      const rate = this.formData.rate || 1
+      const value = parseFloat(e.target.value)
+      let amount = ""
       if (value === 0) {
-        amount = 0;
+        amount = 0
       } else if (value) {
-        amount = parseFloat((parseFloat(value) / rate).toFixed(2));
+        amount = parseFloat((parseFloat(value) / rate).toFixed(2))
       }
-      this.formData.amount = amount.toString();
-      this.lastTouchedAmount = "usd";
+      this.formData.amount = amount.toString()
+      this.lastTouchedAmount = "usd"
     },
 
     adjustTransferAmountsFromRate(e) {
-      const rate = parseFloat(e.target.value);
+      const rate = parseFloat(e.target.value)
       if (rate) {
         if (this.lastTouchedAmount === "ada") {
-          const adaAmount = parseFloat(this.formData.amount);
-          let usdAmount = "";
+          const adaAmount = parseFloat(this.formData.amount)
+          let usdAmount = ""
           if (adaAmount === 0) {
-            usdAmount = 0;
+            usdAmount = 0
           } else if (adaAmount) {
-            usdAmount = parseFloat((parseFloat(adaAmount) * rate).toFixed(2));
+            usdAmount = parseFloat((parseFloat(adaAmount) * rate).toFixed(2))
           }
-          this.formData.amountUSD = usdAmount.toString();
+          this.formData.amountUSD = usdAmount.toString()
         } else {
-          const usdAmount = parseFloat(this.formData.amountUSD);
-          let adaAmount = "";
+          const usdAmount = parseFloat(this.formData.amountUSD)
+          let adaAmount = ""
           if (usdAmount === 0) {
-            adaAmount = 0;
+            adaAmount = 0
           } else if (usdAmount) {
-            adaAmount = parseFloat((parseFloat(usdAmount) / rate).toFixed(2));
+            adaAmount = parseFloat((parseFloat(usdAmount) / rate).toFixed(2))
           }
-          this.formData.amount = adaAmount.toString();
+          this.formData.amount = adaAmount.toString()
         }
       }
     },
 
     enterButtonHandler(e) {
       if (this.isFormUpdate && e.keyCode === 13) {
-        this.submitUpdate();
+        this.submitUpdate()
       }
     },
 
     submitUpdate() {
-      this.transferEdit();
-      this.hideForm();
-      this.adjustBalance();
+      this.transferEdit()
+      this.hideForm()
+      this.adjustBalance()
     },
 
     submitAddSent() {
       if (this.formData.amount) {
-        this.transferAdd("out");
-        this.adjustBalance();
+        this.transferAdd("out")
+        this.adjustBalance()
       }
-      this.hideForm();
+      this.hideForm()
     },
 
     submitAddReceive() {
       if (this.formData.amount) {
-        this.transferAdd("in");
-        this.adjustBalance();
+        this.transferAdd("in")
+        this.adjustBalance()
       }
-      this.hideForm();
+      this.hideForm()
     },
 
     makePayment() {
-      alert("Not implemented yet.");
+      alert("Not implemented yet.")
     },
   },
 
   mounted() {
-    this.loadFromAPI();
-    this.loadCurrentRate();
+    this.loadFromAPI()
+    this.loadCurrentRate()
   },
-};
+}
 </script>
 
 <style lang="scss" scoped>
