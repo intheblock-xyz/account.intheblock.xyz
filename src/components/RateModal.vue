@@ -4,6 +4,7 @@
       <p class="modal-card-title">Rate calculator</p>
     </header>
     <section class="modal-card-body">
+      <h4 class="title is-4">Total</h4>
       <div class="columns">
         <b-field label="₳ Amount" class="column is-3">
           <b-input
@@ -60,6 +61,7 @@
         </b-field>
       </div>
       <div v-if="columns.length">
+        <h4 class="title is-4">Split</h4>
         <div
           class="columns"
           v-for="[idx, row] in rows.entries()"
