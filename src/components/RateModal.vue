@@ -541,7 +541,6 @@ export default {
       } else {
         this.transfersCustom.splice(this.transfersCustom.indexOf(id), 1)
       }
-      console.log(id, this.columnPercentEdited)
       this.columnPercentEdited = this.columnPercentEdited.filter(
         (rowId) => id !== rowId
       )
