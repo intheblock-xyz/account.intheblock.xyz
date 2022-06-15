@@ -8,6 +8,28 @@
       <b-field label="Project name">
         <b-input v-model="projectName" required> </b-input>
       </b-field>
+      <b-field class="" label="Tokens" v-if="isPaidAccount">
+        <b-dropdown aria-role="list" v-model="enabledTokensCodes" multiple>
+          <template #trigger="{active}">
+            <b-button
+              :label="`${enabledTokensCodes.length} selected`"
+              :icon-right="active ? 'menu-up' : 'menu-down'"
+            />
+          </template>
+
+          <b-dropdown-item
+            aria-role="listitem"
+            :value="tokenCode"
+            :disabled="
+              enabledTokensCodes.length === 1 &&
+              tokenCode === enabledTokensCodes[0]
+            "
+            v-for="tokenCode in availableTokensCodes"
+            v-bind:key="tokenCode"
+            >{{ tokenCode.toUpperCase() }}</b-dropdown-item
+          >
+        </b-dropdown>
+      </b-field>
       <h5 class="title is-5">Labels set</h5>
       <div v-for="labelTitle in labelTitlesOrder" v-bind:key="labelTitle">
         <b-field>
@@ -27,7 +49,14 @@
       <b-button
         icon-left="check"
         label="Apply"
-        @click="$emit('submit', { projectName, labelTitles, labelTitlesOrder })"
+        @click="
+          $emit('submit', {
+            projectName,
+            labelTitles,
+            labelTitlesOrder,
+            enabledTokensCodes,
+          })
+        "
         type="is-primary"
       />
       <b-button label="Cancel" @click="$emit('close')" />
@@ -37,33 +66,35 @@
 
 <script>
 export default {
-  props: ["initials"],
+  props: ["initials", "isPaidAccount", "presistedTokensCodes"],
 
   data() {
-    const labelTitles = {};
-    const labelTitlesOrder = [];
+    const labelTitles = {}
+    const labelTitlesOrder = []
     this.initials.labelTitles.forEach((title) => {
-      labelTitles[title] = title;
-      labelTitlesOrder.push(title);
-    });
+      labelTitles[title] = title
+      labelTitlesOrder.push(title)
+    })
     return {
       projectName: this.initials.projectName,
+      availableTokensCodes: ["ada", "eth", "ltc", "dot"],
+      enabledTokensCodes: this.initials.enabledTokensCodes,
       labelTitles,
       labelTitlesOrder,
-    };
+    }
   },
 
   methods: {
     labelAdd() {
-      const key = Date.now().toString();
-      this.labelTitles[key] = "";
-      this.labelTitlesOrder.push(key);
+      const key = Date.now().toString()
+      this.labelTitles[key] = ""
+      this.labelTitlesOrder.push(key)
     },
 
     labelRemove(key) {
-      delete this.labelTitles[key];
-      this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1);
+      delete this.labelTitles[key]
+      this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1)
     },
   },
-};
+}
 </script>

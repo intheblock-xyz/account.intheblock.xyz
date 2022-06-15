@@ -93,7 +93,6 @@ export default {
 
   created() {
     this.$i18n.locale = this.$store.state.user.locale
-    this.isPaidAccount = this.$store.state.user.isPaidAccount
   },
 }
 </script>

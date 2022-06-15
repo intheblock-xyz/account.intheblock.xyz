@@ -19,7 +19,13 @@
             <preferences-modal
               @close="props.close"
               @submit="submitPreferencesForm"
-              :initials="{projectName: projectName, labelTitles}"
+              :isPaidAccount="isPaidAccount"
+              :presistedTokensCodes="transfersTokensCodesSet"
+              :initials="{
+                projectName: projectName,
+                labelTitles,
+                enabledTokensCodes,
+              }"
             ></preferences-modal>
           </template>
         </b-modal>
@@ -242,12 +248,31 @@
           {{ $d(props.row.date, "short") }}
         </b-table-column>
 
-        <b-table-column custom-key="in" label="ADA in" v-slot="props" numeric>
+        <b-table-column
+          custom-key="in"
+          :label="`${isMultipleTokensEnabled ? 'In' : 'ADA in'}`"
+          v-slot="props"
+          numeric
+        >
           {{ props.row.amountIn || "&ndash;" }}
         </b-table-column>
 
-        <b-table-column custom-key="out" label="ADA out" v-slot="props" numeric>
+        <b-table-column
+          custom-key="out"
+          :label="`${isMultipleTokensEnabled ? 'Out' : 'ADA out'}`"
+          v-slot="props"
+          numeric
+        >
           {{ props.row.amountOut || "&ndash;" }}
+        </b-table-column>
+
+        <b-table-column
+          field="tokenCode"
+          label="Token"
+          v-slot="props"
+          v-if="isMultipleTokensEnabled"
+        >
+          {{ props.row.tokenCode ? props.row.tokenCode.toUpperCase() : "ADA" }}
         </b-table-column>
 
         <b-table-column
@@ -256,7 +281,11 @@
           v-slot="props"
           numeric
         >
-          {{ props.row.balance || "&ndash;" }}
+          {{
+            isMultipleTokensEnabled
+              ? $n(props.row.balanceUsd, "currency")
+              : props.row.balance || "&ndash;"
+          }}
         </b-table-column>
 
         <b-table-column
@@ -350,6 +379,7 @@ const sum = (acc, {amountIn, amountOut}) => (acc += amountIn || amountOut)
 
 function normalizeTransfersFromJSON(transfers) {
   let balance = 0
+  let balanceUsd = 0
   return transfers
     .sort((a, b) => a.date - b.date)
     .map((transfer) => ({
@@ -358,6 +388,10 @@ function normalizeTransfersFromJSON(transfers) {
       balance: transfer.amountIn
         ? (balance += transfer.amountIn)
         : (balance -= transfer.amountOut),
+      balanceUsd: (transfer.amountIn
+        ? (balanceUsd += transfer.amountIn * parseFloat(transfer.rate))
+        : (balanceUsd -= transfer.amountOut * parseFloat(transfer.rate))
+      ).toFixed(2),
       date: new Date(transfer.date),
     }))
 }
@@ -415,6 +449,7 @@ function initialFormData(initials = {}) {
     amount,
     amountUSD,
     rate,
+    tokenCode: initials.tokenCode || "ada",
     labels,
   }
 }
@@ -480,12 +515,13 @@ export default {
       formLabels: [],
       labelTitles: [],
       defaultLabelTitle: "",
+      enabledTokensCodes: ["ada"],
       coinGeckoAPI: Object.freeze(new CoinGeckoAPI()),
     }
   },
 
   computed: {
-    ...mapGetters("user", ["locale"]),
+    ...mapGetters("user", ["locale", "isPaidAccount"]),
 
     isFormUpdate() {
       return this.isFormVisible && !!this.formData.id
@@ -503,6 +539,16 @@ export default {
       return this.adaReceived - this.adaSent
     },
 
+    isMultipleTokensEnabled() {
+      return this.isPaidAccount && this.enabledTokensCodes.length > 1
+    },
+
+    transfersTokensCodesSet() {
+      return new Set(
+        this.transfers.map((transfer) => transfer.tokenCode || "ada")
+      )
+    },
+
     toExport() {
       return dataToExport(this.transfers, this.labelTitles)
     },
@@ -518,6 +564,7 @@ export default {
         this.isFormVisible = false
         this.isProjectNameEditing = false
         this.transfers = normalizeTransfersFromJSON(r.data.transfers)
+        this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet)
         this.isProjectLoaded = true
       })
     },
@@ -594,7 +641,12 @@ export default {
       this.isPreferencesModalActive = false
     },
 
-    submitPreferencesForm({projectName, labelTitles, labelTitlesOrder}) {
+    submitPreferencesForm({
+      projectName,
+      labelTitles,
+      labelTitlesOrder,
+      enabledTokensCodes,
+    }) {
       this.projectName = projectName
       const updatedTransfers = []
       const updatedLabelTitles = []
@@ -629,6 +681,7 @@ export default {
         updatedTransfers.push({...transfer, labels})
       }
       this.labelTitles = updatedLabelTitles
+      this.enabledTokensCodes = enabledTokensCodes
       this.transfers = updatedTransfers
       this.formLabels = [...this.labelTitles]
       this.defaultLabelTitle = this.formLabels[0]
@@ -815,6 +868,14 @@ export default {
 
     makePayment() {
       alert("Not implemented yet.")
+    },
+  },
+
+  watch: {
+    isMultipleTokensEnabled(isMultipleTokensEnabled) {
+      if (!isMultipleTokensEnabled) {
+        this.enabledTokensCodes = ["ada"]
+      }
     },
   },
 
