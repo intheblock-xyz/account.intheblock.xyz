@@ -96,7 +96,10 @@
           ></b-datepicker>
         </b-field>
 
-        <b-field label="₳ Amount" class="column is-3">
+        <b-field
+          :label="`${isMultipleTokensEnabled ? '' : '₳ '}Amount`"
+          class="column is-3"
+        >
           <b-input
             type="number"
             step="0.01"
@@ -104,6 +107,24 @@
             v-model="formData.amount"
             @keyup.native="adjustTransferAmountFromAda"
           ></b-input>
+          <p class="control" v-if="enabledTokensCodes.length > 1">
+            <b-dropdown aria-role="list" v-model="formData.tokenCode">
+              <template #trigger="{active}">
+                <b-button
+                  :label="formData.tokenCode.toUpperCase()"
+                  :icon-right="active ? 'menu-up' : 'menu-down'"
+                />
+              </template>
+
+              <b-dropdown-item
+                aria-role="listitem"
+                :value="tokenCode"
+                v-for="tokenCode in enabledTokensCodes"
+                v-bind:key="tokenCode"
+                >{{ tokenCode.toUpperCase() }}</b-dropdown-item
+              >
+            </b-dropdown>
+          </p>
         </b-field>
 
         <b-field label="$ Amount" class="column is-3">
@@ -584,6 +605,7 @@ export default {
           complete: ({data}) => {
             this.projectName = projectName
             this.transfers = normalizeTransfersFromCSV(data)
+            this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet)
             this.labelTitles = labelTitlesFromTransfers(this.transfers)
             this.formLabels = this.labelTitles
             this.defaultLabelTitle = this.labelTitles[0]
@@ -622,6 +644,7 @@ export default {
       this.projectName = "New project"
       this.isProjectLoaded = true
       this.transfers = []
+      this.enabledTokensCodes = ["ada"]
       this.isFormVisible = false
       this.isProjectNameEditing = false
       this.formData = initialFormData()
@@ -759,11 +782,15 @@ export default {
 
     adjustBalance() {
       let balance = 0
+      let balanceUsd = 0
       this.transfers = this.transfers.map((t) => ({
         ...t,
         balance: t.amountIn
           ? (balance += t.amountIn)
           : (balance -= t.amountOut),
+        balanceUsd: t.amountIn
+          ? (balanceUsd += t.amountIn * t.rate).toFixed(2)
+          : (balanceUsd -= t.amountOut * t.rate).toFixed(2),
       }))
     },
 
@@ -875,6 +902,15 @@ export default {
     isMultipleTokensEnabled(isMultipleTokensEnabled) {
       if (!isMultipleTokensEnabled) {
         this.enabledTokensCodes = ["ada"]
+      }
+    },
+
+    isPaidAccount(isPaidAccount) {
+      if (!isPaidAccount) {
+        this.transfers = this.transfers.map((transfer) => ({
+          ...transfer,
+          tokenCode: "ada",
+        }))
       }
     },
   },

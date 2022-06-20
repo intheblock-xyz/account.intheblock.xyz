@@ -8,7 +8,7 @@
       <b-field label="Project name">
         <b-input v-model="projectName" required> </b-input>
       </b-field>
-      <b-field class="" label="Tokens" v-if="isPaidAccount">
+      <b-field label="Tokens" v-if="isPaidAccount">
         <b-dropdown aria-role="list" v-model="enabledTokensCodes" multiple>
           <template #trigger="{active}">
             <b-button
@@ -21,8 +21,10 @@
             aria-role="listitem"
             :value="tokenCode"
             :disabled="
-              enabledTokensCodes.length === 1 &&
-              tokenCode === enabledTokensCodes[0]
+              (enabledTokensCodes.length === 1 &&
+                tokenCode === enabledTokensCodes[0]) ||
+              (presistedTokensCodes.has(tokenCode) &&
+                enabledTokensCodes.includes(tokenCode))
             "
             v-for="tokenCode in availableTokensCodes"
             v-bind:key="tokenCode"
