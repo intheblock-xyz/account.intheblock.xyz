@@ -571,6 +571,12 @@ export default {
     const transfersSelected = transfers.slice(0, 5).map(mapId)
     this.transfers = transfers
     this.transfersSelected = transfersSelected
+    this.$nextTick(() => {
+      this.columnPercent = transfers.map(() =>
+        Math.round(100 / this.transfers.length).toString()
+      )
+      this.$nextTick(this.distributePercentRemainders)
+    })
   },
 }
 </script>
