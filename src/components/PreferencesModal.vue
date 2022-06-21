@@ -23,8 +23,7 @@
             :disabled="
               (enabledTokensCodes.length === 1 &&
                 tokenCode === enabledTokensCodes[0]) ||
-              (presistedTokensCodes.has(tokenCode) &&
-                enabledTokensCodes.includes(tokenCode))
+              presistedTokensCodes.has(tokenCode)
             "
             v-for="tokenCode in availableTokensCodes"
             v-bind:key="tokenCode"

@@ -68,17 +68,23 @@
           {{ projectName || "[unnamed project]" }}
         </span>
       </h3>
-      <ul>
+      <ul
+        v-if="
+          !isPaidAccount ||
+          (transfersTokensCodesSet.size === 1 &&
+            transfersTokensCodesSet.has('ada'))
+        "
+      >
         <li><b>ADA available:</b> {{ $n(adaAvailable) }}</li>
         <li><b>ADA received:</b> {{ $n(adaReceived) }}</li>
         <li><b>ADA sent:</b> {{ $n(Math.abs(adaSent)) }}</li>
         <li>
           <b>Current ADA/USD rate:</b>
-          {{ currentRate ? $n(currentRate) : "refreshing..." }}
+          {{ currentRates.ada ? $n(currentRates.ada) : "refreshing..." }}
           <b-button
             type="is-ghost"
             icon-left="refresh"
-            :loading="!currentRate"
+            :loading="!currentRates.ada"
             @click="loadCurrentRate"
           ></b-button>
         </li>
@@ -107,7 +113,10 @@
             v-model="formData.amount"
             @keyup.native="adjustTransferAmountFromAda"
           ></b-input>
-          <p class="control" v-if="enabledTokensCodes.length > 1">
+          <p
+            class="control"
+            v-if="enabledTokensCodes.length > 1 && !this.isFormUpdate"
+          >
             <b-dropdown aria-role="list" v-model="formData.tokenCode">
               <template #trigger="{active}">
                 <b-button
@@ -125,6 +134,12 @@
               >
             </b-dropdown>
           </p>
+          <p
+            class="control"
+            v-if="enabledTokensCodes.length > 1 && this.isFormUpdate"
+          >
+            <b-button disabled :label="formData.tokenCode.toUpperCase()" />
+          </p>
         </b-field>
 
         <b-field label="$ Amount" class="column is-3">
@@ -137,7 +152,10 @@
           ></b-input>
         </b-field>
 
-        <b-field label="ADA/USD rate" class="column is-3">
+        <b-field
+          :label="isMultipleTokensEnabled ? 'Rate' : 'ADA/USD rate'"
+          class="column is-3"
+        >
           <b-input
             type="number"
             step="0.000000000000001"
@@ -271,7 +289,7 @@
 
         <b-table-column
           custom-key="in"
-          :label="`${isMultipleTokensEnabled ? 'In' : 'ADA in'}`"
+          :label="`${multiTokenUI ? 'In' : 'ADA in'}`"
           v-slot="props"
           numeric
         >
@@ -280,7 +298,7 @@
 
         <b-table-column
           custom-key="out"
-          :label="`${isMultipleTokensEnabled ? 'Out' : 'ADA out'}`"
+          :label="`${multiTokenUI ? 'Out' : 'ADA out'}`"
           v-slot="props"
           numeric
         >
@@ -291,7 +309,7 @@
           field="tokenCode"
           label="Token"
           v-slot="props"
-          v-if="isMultipleTokensEnabled"
+          v-if="multiTokenUI"
         >
           {{ props.row.tokenCode ? props.row.tokenCode.toUpperCase() : "ADA" }}
         </b-table-column>
@@ -303,7 +321,7 @@
           numeric
         >
           {{
-            isMultipleTokensEnabled
+            multiTokenUI
               ? $n(props.row.balanceUsd, "currency")
               : props.row.balance || "&ndash;"
           }}
@@ -325,7 +343,7 @@
 
         <b-table-column
           field="rate"
-          label="ADA/USD rate"
+          :label="multiTokenUI ? 'Rate' : 'ADA/USD rate'"
           v-slot="props"
           numeric
           sortable
@@ -398,6 +416,20 @@ const sent = (t) => !!t.amountOut
 
 const sum = (acc, {amountIn, amountOut}) => (acc += amountIn || amountOut)
 
+const coinGeckoTokensCodes = {
+  ada: "cardano",
+  eth: "ethereum",
+  ltc: "litecoin",
+  dot: "polkadot",
+}
+
+const coinGeckoTokensCodesReverse = {
+  cardano: "ada",
+  ethereum: "eth",
+  litecoin: "ltc",
+  polkadot: "dot",
+}
+
 function normalizeTransfersFromJSON(transfers) {
   let balance = 0
   let balanceUsd = 0
@@ -455,8 +487,9 @@ function normalizeTransfersFromCSV(csvArray) {
   })
 }
 
-function initialFormData(initials = {}) {
+function initialFormData(currentRates = {}, initials = {}) {
   const rate = initials.rate || 1
+  const tokenCode = initials.tokenCode || "ada"
   const amount = initials.amountIn || initials.amountOut || null
   const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount
   const labels = initials.labels
@@ -469,8 +502,8 @@ function initialFormData(initials = {}) {
     date: initials.date ? new Date(initials.date) : new Date(),
     amount,
     amountUSD,
-    rate,
-    tokenCode: initials.tokenCode || "ada",
+    rate: currentRates[tokenCode] || 1,
+    tokenCode,
     labels,
   }
 }
@@ -527,6 +560,7 @@ export default {
       isProjectLoaded: false,
       transfers: [],
       currentRate: null,
+      currentRates: {ada: null},
       lastTouchedAmount: "ada",
       isFormVisible: false,
       isPreferencesModalActive: false,
@@ -564,9 +598,26 @@ export default {
       return this.isPaidAccount && this.enabledTokensCodes.length > 1
     },
 
+    multiTokenUI() {
+      return (
+        this.isPaidAccount &&
+        (!this.transfersTokensCodesSet.has("ada") ||
+          this.transfersTokensCodesSet.size > 1)
+      )
+    },
+
     transfersTokensCodesSet() {
       return new Set(
         this.transfers.map((transfer) => transfer.tokenCode || "ada")
+      )
+    },
+
+    geckoApiTokensIds() {
+      return Object.fromEntries(
+        this.enabledTokensCodes.map((tokenCode) => [
+          tokenCode,
+          coinGeckoTokensCodes[tokenCode],
+        ])
       )
     },
 
@@ -618,26 +669,46 @@ export default {
     },
 
     loadCurrentRate() {
-      if (process.env.NODE_ENV === "development") {
-        const rate = 0.5
-        this.currentRate = rate
-        if (!this.isFormVisible) {
-          this.formData.rate = rate
-        }
-      } else {
-        this.currentRate = null
-        this.coinGeckoAPI.simple
-          .price({ids: ["cardano"], vs_currencies: ["usd"]})
-          .then((result) => {
-            if (result.success) {
-              const rate = parseFloat(result.data.cardano.usd.toFixed(15))
-              this.currentRate = rate
-              if (!this.isFormVisible) {
-                this.formData.rate = rate
-              }
+      // if (process.env.NODE_ENV === "development") {
+      //   const rate = 0.5
+      //   this.currentRate = rate
+      //   if (!this.isFormVisible) {
+      //     this.formData.rate = rate
+      //   }
+      // } else {
+      this.currentRate = null
+      this.currentRates = {ada: null}
+      this.coinGeckoAPI.simple
+        .price({
+          ids: Object.values(this.geckoApiTokensIds),
+          vs_currencies: ["usd"],
+        })
+        .then((result) => {
+          if (result.success) {
+            // const rate = parseFloat(result.data.cardano.usd.toFixed(15))
+            // this.currentRate = rate
+            // console.log(
+            //   Object.fromEntries(
+            //     Object.keys(result.data).map((tokenId) => [
+            //       coinGeckoTokensCodesReverse[tokenId],
+            //       parseFloat(result.data[tokenId].usd.toFixed(15)),
+            //     ])
+            //   )
+            // )
+            this.currentRates = Object.fromEntries(
+              Object.keys(result.data).map((tokenId) => [
+                coinGeckoTokensCodesReverse[tokenId],
+                parseFloat(result.data[tokenId].usd.toFixed(15)),
+              ])
+            )
+            if (!this.isFormVisible && Object.keys(result.data).length) {
+              this.formData.rate =
+                this.currentRates.ada ||
+                this.currentRates[this.enabledTokensCodes[0]]
             }
-          })
-      }
+          }
+        })
+      // }
     },
 
     newProject() {
@@ -704,7 +775,9 @@ export default {
         updatedTransfers.push({...transfer, labels})
       }
       this.labelTitles = updatedLabelTitles
-      this.enabledTokensCodes = enabledTokensCodes
+      this.enabledTokensCodes = Array.from(
+        new Set(enabledTokensCodes, Array.from(this.transfersTokensCodesSet))
+      )
       this.transfers = updatedTransfers
       this.formLabels = [...this.labelTitles]
       this.defaultLabelTitle = this.formLabels[0]
@@ -795,7 +868,7 @@ export default {
     },
 
     transferToForm(row) {
-      this.formData = initialFormData(row)
+      this.formData = initialFormData(this.currentRates, row)
       this.formLabels = [...this.labelTitles]
       this.showForm()
     },
@@ -810,7 +883,7 @@ export default {
     },
 
     resetForm() {
-      this.formData = initialFormData({rate: this.currentRate || 1})
+      this.formData = initialFormData(this.currentRates)
       this.formLabels = [...this.labelTitles]
     },
 
@@ -841,7 +914,9 @@ export default {
     },
 
     adjustTransferAmountsFromRate(e) {
-      const rate = parseFloat(e.target.value)
+      const rate = e
+        ? parseFloat(e.target.value)
+        : parseFloat(this.formData.rate)
       if (rate) {
         if (this.lastTouchedAmount === "ada") {
           const adaAmount = parseFloat(this.formData.amount)
@@ -899,19 +974,28 @@ export default {
   },
 
   watch: {
-    isMultipleTokensEnabled(isMultipleTokensEnabled) {
-      if (!isMultipleTokensEnabled) {
+    isPaidAccount(isPaidAccount) {
+      if (!isPaidAccount) {
         this.enabledTokensCodes = ["ada"]
+        if (
+          this.transfers.filter(({tokenCode}) => tokenCode !== "ada").length
+        ) {
+          this.newProject()
+        }
       }
     },
 
-    isPaidAccount(isPaidAccount) {
-      if (!isPaidAccount) {
-        this.transfers = this.transfers.map((transfer) => ({
-          ...transfer,
-          tokenCode: "ada",
-        }))
-      }
+    geckoApiTokensIds() {
+      this.loadCurrentRate()
+    },
+
+    "formData.tokenCode": {
+      handler: function (tokenCode, oldTokenCode) {
+        if (this.isFormVisible && tokenCode !== oldTokenCode) {
+          this.formData.rate = this.currentRates[tokenCode]
+          this.adjustTransferAmountsFromRate()
+        }
+      },
     },
   },
 
