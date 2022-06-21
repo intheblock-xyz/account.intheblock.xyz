@@ -40,13 +40,13 @@
           type="file"
           accept=".csv"
           ref="fileInput"
-          @change="loadFromFile"
+          v-on:change="loadFromFile"
         />
         <b-button @click="$refs.fileInput.click()">Import from .csv</b-button>
       </div>
     </div>
     <div v-if="isProjectLoaded" class="column is-12">
-      <h3 class="title is-12">
+      <h3 class="title is-3">
         <span v-if="isProjectNameEditing">
           <b-field>
             <b-input
@@ -68,27 +68,60 @@
           {{ projectName || "[unnamed project]" }}
         </span>
       </h3>
-      <ul
-        v-if="
-          !isPaidAccount ||
-          (transfersTokensCodesSet.size === 1 &&
-            transfersTokensCodesSet.has('ada'))
-        "
-      >
-        <li><b>ADA available:</b> {{ $n(adaAvailable) }}</li>
-        <li><b>ADA received:</b> {{ $n(adaReceived) }}</li>
-        <li><b>ADA sent:</b> {{ $n(Math.abs(adaSent)) }}</li>
+    </div>
+    <div
+      v-for="token in tokensOverview"
+      v-bind:key="token.code"
+      class="column is-3"
+    >
+      <ul v-if="isProjectLoaded">
         <li>
-          <b>Current ADA/USD rate:</b>
-          {{ currentRates.ada ? $n(currentRates.ada) : "refreshing..." }}
-          <b-button
-            type="is-ghost"
-            icon-left="refresh"
-            :loading="!currentRates.ada"
-            @click="loadCurrentRate"
-          ></b-button>
+          <b>{{ token.code.toUpperCase() }} available:</b>
+          {{ $n(token.available) }}
+        </li>
+        <li>
+          <b>{{ token.code.toUpperCase() }} received:</b>
+          {{ $n(token.received) }}
+        </li>
+        <li>
+          <b>{{ token.code.toUpperCase() }} sent:</b>
+          {{ $n(token.sent) }}
+        </li>
+        <li>
+          <b>Current {{ token.code.toUpperCase() }}/USD rate:</b>
+          {{ currentRates[token.code] ? $n(currentRates[token.code]) : "..." }}
         </li>
       </ul>
+    </div>
+    <div v-if="isProjectLoaded" class="column is-12">
+      <ul>
+        <li>
+          <b>USD available:</b>
+          {{ $n(usdAvailable, "currency") }}
+        </li>
+        <li>
+          <b>USD received:</b>
+          {{ $n(usdReceived, "currency") }}
+        </li>
+        <li>
+          <b>USD sent:</b>
+          {{ $n(usdSent, "currency") }}
+        </li>
+      </ul>
+    </div>
+    <div v-if="isProjectLoaded" class="column is-12">
+      <div class="buttons">
+        <b-button
+          @click="loadCurrentRate"
+          size="is-small"
+          icon-left="refresh"
+          :loading="currentRates.ada === null"
+          >Refresh rates</b-button
+        >
+      </div>
+    </div>
+    <div v-if="isProjectLoaded" class="column is-12">
+      <hr />
     </div>
     <div v-if="isProjectLoaded" class="column is-12">
       <div v-if="isFormVisible" class="box columns is-multiline">
@@ -117,8 +150,12 @@
             class="control"
             v-if="enabledTokensCodes.length > 1 && !this.isFormUpdate"
           >
-            <b-dropdown aria-role="list" v-model="formData.tokenCode">
-              <template #trigger="{active}">
+            <b-dropdown
+              aria-role="list"
+              v-model="formData.tokenCode"
+              position="is-bottom-left"
+            >
+              <template #trigger="{ active }">
                 <b-button
                   :label="formData.tokenCode.toUpperCase()"
                   :icon-right="active ? 'menu-up' : 'menu-down'"
@@ -185,6 +222,7 @@
                 @submit="submitRateForm"
                 :initialTransfers="transfers"
                 :currentRate="formData.rate"
+                :currentTokenCode="formData.tokenCode"
                 :initialAdaAmount="formData.amount"
                 :initialUsdAmount="formData.amountUSD"
                 :initialLastTouchedAmount="lastTouchedAmount"
@@ -401,38 +439,38 @@
 </template>
 
 <script>
-import Papa from "papaparse"
-import CoinGeckoAPI from "coingecko-api"
-import {mapGetters} from "vuex"
-import ProjectAPI from "@/api/project.js"
-import PreferencesModal from "./PreferencesModal.vue"
-import RateModal from "./RateModal.vue"
+import Papa from "papaparse";
+import CoinGeckoAPI from "coingecko-api";
+import { mapGetters } from "vuex";
+import ProjectAPI from "@/api/project.js";
+import PreferencesModal from "./PreferencesModal.vue";
+import RateModal from "./RateModal.vue";
 
-const idIs = (id) => (t) => t.id === id
-const idIsNot = (id) => (t) => t.id !== id
+const idIs = (id) => (t) => t.id === id;
+const idIsNot = (id) => (t) => t.id !== id;
 
-const received = (t) => !!t.amountIn
-const sent = (t) => !!t.amountOut
+const received = (t) => !!t.amountIn;
+const sent = (t) => !!t.amountOut;
 
-const sum = (acc, {amountIn, amountOut}) => (acc += amountIn || amountOut)
+const sum = (acc, { amountIn, amountOut }) => (acc += amountIn || amountOut);
 
 const coinGeckoTokensCodes = {
   ada: "cardano",
   eth: "ethereum",
   ltc: "litecoin",
   dot: "polkadot",
-}
+};
 
 const coinGeckoTokensCodesReverse = {
   cardano: "ada",
   ethereum: "eth",
   litecoin: "ltc",
   polkadot: "dot",
-}
+};
 
 function normalizeTransfersFromJSON(transfers) {
-  let balance = 0
-  let balanceUsd = 0
+  let balance = 0;
+  let balanceUsd = 0;
   return transfers
     .sort((a, b) => a.date - b.date)
     .map((transfer) => ({
@@ -446,73 +484,74 @@ function normalizeTransfersFromJSON(transfers) {
         : (balanceUsd -= transfer.amountOut * parseFloat(transfer.rate))
       ).toFixed(2),
       date: new Date(transfer.date),
-    }))
+    }));
 }
 
 function labelTitlesFromTransfers(transfers) {
   const allLabelTitles = transfers.map((transfer) =>
-    transfer.labels.map(({title}) => title)
-  )
+    transfer.labels.map(({ title }) => title)
+  );
   return allLabelTitles.reduce((acc, cur) => {
     cur.forEach((title) => {
       if (!acc.includes(title)) {
-        acc.push(title)
+        acc.push(title);
       }
-    })
-    return acc
-  }, [])
+    });
+    return acc;
+  }, []);
 }
 
 function normalizeTransfersFromCSV(csvArray) {
-  const columnNames = csvArray[0]
+  const columnNames = csvArray[0];
   const labelTitles = columnNames
-    .slice(6)
-    .map((name) => name.split("label_")[1])
+    .slice(7)
+    .map((name) => name.split("label_")[1]);
   return csvArray.slice(1).map((tArr) => {
-    const labels = []
-    tArr.slice(6).map((value, idx) => {
+    const labels = [];
+    tArr.slice(7).map((value, idx) => {
       if (value) {
-        labels.push({title: labelTitles[idx], value})
+        labels.push({ title: labelTitles[idx], value });
       }
-    })
+    });
     return {
       id: tArr[0],
       date: new Date(tArr[1]),
       amountIn: parseFloat(tArr[2]),
       amountOut: parseFloat(tArr[3]),
-      balance: parseFloat(tArr[4]),
-      rate: parseFloat(tArr[5]),
+      tokenCode: tArr[4],
+      balance: parseFloat(tArr[5]),
+      rate: parseFloat(tArr[6]),
       labels,
-    }
-  })
+    };
+  });
 }
 
 function initialFormData(currentRates = {}, initials = {}) {
-  const rate = initials.rate || 1
-  const tokenCode = initials.tokenCode || "ada"
-  const amount = initials.amountIn || initials.amountOut || null
-  const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount
+  const tokenCode = initials.tokenCode || "ada";
+  const rate = initials.rate || currentRates[tokenCode] || 1;
+  const amount = initials.amountIn || initials.amountOut || null;
+  const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount;
   const labels = initials.labels
     ? Object.fromEntries(
-        initials.labels.map(({title, value}) => [title, value])
+        initials.labels.map(({ title, value }) => [title, value])
       )
-    : {}
+    : {};
   return {
     id: initials.id || null,
     date: initials.date ? new Date(initials.date) : new Date(),
     amount,
     amountUSD,
-    rate: currentRates[tokenCode] || 1,
+    rate,
     tokenCode,
     labels,
-  }
+  };
 }
 
 function normalizeFormData(formData, formLabels, direction) {
   const labels = formLabels.map((title) => ({
     title,
     value: formData.labels[title] || "",
-  }))
+  }));
   return {
     ...formData,
     id: formData.id || Date.now().toString(),
@@ -525,34 +564,35 @@ function normalizeFormData(formData, formLabels, direction) {
         : 0,
     rate: parseFloat(formData.rate),
     labels,
-  }
+  };
 }
 
 function dataToExport(transfers, labelTitles) {
   return transfers.map((transfer) => {
-    const labels = {}
+    const labels = {};
     labelTitles.forEach((title) => {
-      const label = transfer.labels.find((l) => l.title === title)
-      labels[`label_${title}`] = label ? label.value : ""
-    })
+      const label = transfer.labels.find((l) => l.title === title);
+      labels[`label_${title}`] = label ? label.value : "";
+    });
     const date =
       typeof transfer.date === "number"
         ? new Date(transfer.date)
-        : transfer.date
+        : transfer.date;
     return {
       id: transfer.id,
       date: `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`,
       amountIn: transfer.amountIn,
       amountOut: transfer.amountOut,
+      tokenCode: transfer.tokenCode,
       balance: transfer.balance,
       rate: transfer.rate,
       ...labels,
-    }
-  })
+    };
+  });
 }
 
 export default {
-  components: {PreferencesModal, RateModal},
+  components: { PreferencesModal, RateModal },
 
   data() {
     return {
@@ -560,7 +600,7 @@ export default {
       isProjectLoaded: false,
       transfers: [],
       currentRate: null,
-      currentRates: {ada: null},
+      currentRates: { ada: null },
       lastTouchedAmount: "ada",
       isFormVisible: false,
       isPreferencesModalActive: false,
@@ -572,30 +612,54 @@ export default {
       defaultLabelTitle: "",
       enabledTokensCodes: ["ada"],
       coinGeckoAPI: Object.freeze(new CoinGeckoAPI()),
-    }
+    };
   },
 
   computed: {
     ...mapGetters("user", ["locale", "isPaidAccount"]),
 
     isFormUpdate() {
-      return this.isFormVisible && !!this.formData.id
+      return this.isFormVisible && !!this.formData.id;
     },
 
     adaReceived() {
-      return this.transfers.filter(received).reduce(sum, 0)
+      return this.transfers.filter(received).reduce(sum, 0);
     },
 
     adaSent() {
-      return this.transfers.filter(sent).reduce(sum, 0)
+      return this.transfers.filter(sent).reduce(sum, 0);
     },
 
     adaAvailable() {
-      return this.adaReceived - this.adaSent
+      return this.adaReceived - this.adaSent;
+    },
+
+    usdReceived() {
+      return this.transfers
+        .filter(received)
+        .reduce(
+          (acc, { amountIn, amountOut, rate }) =>
+            (acc += (amountIn || amountOut) * rate),
+          0
+        );
+    },
+
+    usdSent() {
+      return this.transfers
+        .filter(sent)
+        .reduce(
+          (acc, { amountIn, amountOut, rate }) =>
+            (acc += (amountIn || amountOut) * rate),
+          0
+        );
+    },
+
+    usdAvailable() {
+      return this.usdReceived - this.usdSent;
     },
 
     isMultipleTokensEnabled() {
-      return this.isPaidAccount && this.enabledTokensCodes.length > 1
+      return this.isPaidAccount && this.enabledTokensCodes.length > 1;
     },
 
     multiTokenUI() {
@@ -603,13 +667,13 @@ export default {
         this.isPaidAccount &&
         (!this.transfersTokensCodesSet.has("ada") ||
           this.transfersTokensCodesSet.size > 1)
-      )
+      );
     },
 
     transfersTokensCodesSet() {
       return new Set(
         this.transfers.map((transfer) => transfer.tokenCode || "ada")
-      )
+      );
     },
 
     geckoApiTokensIds() {
@@ -618,54 +682,85 @@ export default {
           tokenCode,
           coinGeckoTokensCodes[tokenCode],
         ])
-      )
+      );
+    },
+
+    tokensOverview() {
+      return this.enabledTokensCodes.map((tokenCode) => {
+        const received = this.transfers
+          .filter((t) => !!t.amountIn && t.tokenCode === tokenCode)
+          .reduce(sum, 0);
+        const sent = this.transfers
+          .filter((t) => !!t.amountOut && t.tokenCode === tokenCode)
+          .reduce(sum, 0);
+        const available = received - sent;
+        return {
+          code: tokenCode,
+          received,
+          sent,
+          available,
+        };
+      });
     },
 
     toExport() {
-      return dataToExport(this.transfers, this.labelTitles)
+      return dataToExport(this.transfers, this.labelTitles);
     },
   },
 
   methods: {
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
-        this.projectName = r.data.name
-        this.labelTitles = labelTitlesFromTransfers(r.data.transfers)
-        this.formLabels = this.labelTitles
-        this.defaultLabelTitle = this.labelTitles[0]
-        this.isFormVisible = false
-        this.isProjectNameEditing = false
-        this.transfers = normalizeTransfersFromJSON(r.data.transfers)
-        this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet)
-        this.isProjectLoaded = true
-      })
+        this.projectName = r.data.name;
+        this.labelTitles = labelTitlesFromTransfers(r.data.transfers);
+        this.formLabels = this.labelTitles;
+        this.defaultLabelTitle = this.labelTitles[0];
+        this.isFormVisible = false;
+        this.isProjectNameEditing = false;
+        this.transfers = normalizeTransfersFromJSON(r.data.transfers);
+        this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet);
+        this.isProjectLoaded = true;
+      });
     },
 
     loadFromFile(e) {
-      const file = e.target.files && e.target.files[0]
+      const file = e.target.files && e.target.files[0];
       if (file) {
-        const projectName = file.name.split(/.csv$/)[0]
+        const projectName = file.name.split(/.csv$/)[0];
         Papa.parse(file, {
           error: (error) => {
             this.$buefy.toast.open({
               message: `Error parsing the file: "${error}"`,
               type: "is-danger",
               duration: 3000,
-            })
+            });
           },
-          complete: ({data}) => {
-            this.projectName = projectName
-            this.transfers = normalizeTransfersFromCSV(data)
-            this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet)
-            this.labelTitles = labelTitlesFromTransfers(this.transfers)
-            this.formLabels = this.labelTitles
-            this.defaultLabelTitle = this.labelTitles[0]
-            this.isFormVisible = false
-            this.isProjectNameEditing = false
-            this.isProjectLoaded = true
+          complete: ({ data }) => {
+            const transfers = normalizeTransfersFromCSV(data);
+            if (
+              new Set(transfers.map((transfer) => transfer.tokenCode || "ada"))
+                .size > 1 &&
+              !this.isPaidAccount
+            ) {
+              alert("Multitoken projects available only in paid account");
+            } else {
+              this.projectName = projectName;
+              this.transfers = transfers;
+              this.enabledTokensCodes = Array.from(
+                this.transfersTokensCodesSet
+              );
+              this.labelTitles = labelTitlesFromTransfers(transfers);
+              this.formLabels = this.labelTitles;
+              this.defaultLabelTitle = this.labelTitles[0];
+              this.isFormVisible = false;
+              this.isProjectNameEditing = false;
+              this.isProjectLoaded = true;
+              this.adjustBalance();
+            }
           },
-        })
+        });
       }
+      this.$refs.fileInput.value = null;
     },
 
     loadCurrentRate() {
@@ -676,8 +771,8 @@ export default {
       //     this.formData.rate = rate
       //   }
       // } else {
-      this.currentRate = null
-      this.currentRates = {ada: null}
+      this.currentRate = null;
+      this.currentRates = { ada: null };
       this.coinGeckoAPI.simple
         .price({
           ids: Object.values(this.geckoApiTokensIds),
@@ -700,39 +795,39 @@ export default {
                 coinGeckoTokensCodesReverse[tokenId],
                 parseFloat(result.data[tokenId].usd.toFixed(15)),
               ])
-            )
+            );
             if (!this.isFormVisible && Object.keys(result.data).length) {
               this.formData.rate =
                 this.currentRates.ada ||
-                this.currentRates[this.enabledTokensCodes[0]]
+                this.currentRates[this.enabledTokensCodes[0]];
             }
           }
-        })
+        });
       // }
     },
 
     newProject() {
-      this.projectName = "New project"
-      this.isProjectLoaded = true
-      this.transfers = []
-      this.enabledTokensCodes = ["ada"]
-      this.isFormVisible = false
-      this.isProjectNameEditing = false
-      this.formData = initialFormData()
-      this.labelTitles = ["Label"]
-      this.defaultLabelTitle = "Label"
-      this.formLabels = [this.defaultLabelTitle]
-      this.loadCurrentRate()
+      this.projectName = "New project";
+      this.isProjectLoaded = true;
+      this.transfers = [];
+      this.enabledTokensCodes = ["ada"];
+      this.isFormVisible = false;
+      this.isProjectNameEditing = false;
+      this.formData = initialFormData();
+      this.labelTitles = ["Label"];
+      this.defaultLabelTitle = "Label";
+      this.formLabels = [this.defaultLabelTitle];
+      this.loadCurrentRate();
     },
 
     showPreferencesModal() {
-      this.isProjectNameEditing = false
-      this.isFormVisible = false
-      this.isPreferencesModalActive = true
+      this.isProjectNameEditing = false;
+      this.isFormVisible = false;
+      this.isPreferencesModalActive = true;
     },
 
     hidePreferencesModal() {
-      this.isPreferencesModalActive = false
+      this.isPreferencesModalActive = false;
     },
 
     submitPreferencesForm({
@@ -741,269 +836,269 @@ export default {
       labelTitlesOrder,
       enabledTokensCodes,
     }) {
-      this.projectName = projectName
-      const updatedTransfers = []
-      const updatedLabelTitles = []
-      const renamedLabels = []
-      const labelRenames = {}
+      this.projectName = projectName;
+      const updatedTransfers = [];
+      const updatedLabelTitles = [];
+      const renamedLabels = [];
+      const labelRenames = {};
       const newLabelTitles = labelTitlesOrder.filter(
         (title) => !this.labelTitles.includes(title)
-      )
+      );
       const removedLabels = this.labelTitles.filter(
         (title) => !labelTitlesOrder.includes(title)
-      )
+      );
       labelTitlesOrder.forEach((key) => {
         if (labelTitles[key]) {
-          updatedLabelTitles.push(labelTitles[key])
+          updatedLabelTitles.push(labelTitles[key]);
           if (key !== labelTitles[key]) {
             if (!newLabelTitles.includes(key)) {
-              renamedLabels.push(key)
-              labelRenames[key] = labelTitles[key]
+              renamedLabels.push(key);
+              labelRenames[key] = labelTitles[key];
             }
           }
         }
-      })
+      });
       for (const transfer of this.transfers) {
-        const labels = []
+        const labels = [];
         for (const label of transfer.labels) {
           if (renamedLabels.includes(label.title)) {
-            labels.push({...label, title: labelRenames[label.title]})
+            labels.push({ ...label, title: labelRenames[label.title] });
           } else if (!removedLabels.includes(label.title)) {
-            labels.push({...label})
+            labels.push({ ...label });
           }
         }
-        updatedTransfers.push({...transfer, labels})
+        updatedTransfers.push({ ...transfer, labels });
       }
-      this.labelTitles = updatedLabelTitles
+      this.labelTitles = updatedLabelTitles;
       this.enabledTokensCodes = Array.from(
         new Set(enabledTokensCodes, Array.from(this.transfersTokensCodesSet))
-      )
-      this.transfers = updatedTransfers
-      this.formLabels = [...this.labelTitles]
-      this.defaultLabelTitle = this.formLabels[0]
-      this.hidePreferencesModal()
+      );
+      this.transfers = updatedTransfers;
+      this.formLabels = [...this.labelTitles];
+      this.defaultLabelTitle = this.formLabels[0];
+      this.hidePreferencesModal();
     },
 
     showRateModal() {
-      this.isRateModalActive = true
+      this.isRateModalActive = true;
     },
 
     hideRateModal() {
-      this.isRateModalActive = false
+      this.isRateModalActive = false;
     },
 
-    submitRateForm({finalRate, adaAmount, usdAmount, lastTouchedAmount}) {
-      this.lastTouchedAmount = lastTouchedAmount
-      this.formData.rate = finalRate
-      this.formData.amount = adaAmount
-      this.formData.amountUSD = usdAmount
-      this.hideRateModal()
+    submitRateForm({ finalRate, adaAmount, usdAmount, lastTouchedAmount }) {
+      this.lastTouchedAmount = lastTouchedAmount;
+      this.formData.rate = finalRate;
+      this.formData.amount = adaAmount;
+      this.formData.amountUSD = usdAmount;
+      this.hideRateModal();
     },
 
     enableProjectNameEditing() {
-      this.isProjectNameEditing = true
+      this.isProjectNameEditing = true;
       this.$nextTick(() => {
-        this.$refs.projectNameInput.focus()
-      })
+        this.$refs.projectNameInput.focus();
+      });
     },
 
     disableProjectNameEditing() {
-      this.isProjectNameEditing = false
+      this.isProjectNameEditing = false;
     },
 
     projectNameEnterButtonHandler(e) {
       if (this.isProjectNameEditing && e.keyCode === 13) {
-        this.disableProjectNameEditing()
+        this.disableProjectNameEditing();
       }
     },
 
     transferAdd(direction) {
       this.transfers.push(
         normalizeFormData(this.formData, this.formLabels, direction)
-      )
+      );
     },
 
     transferEdit() {
       if (this.formData.id) {
-        const tIndex = this.transfers.findIndex(idIs(this.formData.id))
-        const direction = this.transfers[tIndex].amountIn ? "in" : "out"
+        const tIndex = this.transfers.findIndex(idIs(this.formData.id));
+        const direction = this.transfers[tIndex].amountIn ? "in" : "out";
         this.transfers.splice(
           tIndex,
           1,
           normalizeFormData(this.formData, this.formLabels, direction)
-        )
+        );
       }
     },
 
     transferRemove(row) {
-      this.transfers = this.transfers.filter(idIsNot(row.id))
-      this.adjustBalance()
+      this.transfers = this.transfers.filter(idIsNot(row.id));
+      this.adjustBalance();
     },
 
     getLabelValue(title, labels) {
-      let value
+      let value;
       if (labels) {
-        const label = labels.find((l) => l.title === title)
+        const label = labels.find((l) => l.title === title);
         if (label) {
-          return label.value
+          return label.value;
         }
       } else {
-        value = this.formData.labels[title]
+        value = this.formData.labels[title];
       }
-      return value || ""
+      return value || "";
     },
 
     adjustBalance() {
-      let balance = 0
-      let balanceUsd = 0
+      let balance = 0;
+      let balanceUsd = 0;
       this.transfers = this.transfers.map((t) => ({
         ...t,
         balance: t.amountIn
           ? (balance += t.amountIn)
           : (balance -= t.amountOut),
         balanceUsd: t.amountIn
-          ? (balanceUsd += t.amountIn * t.rate).toFixed(2)
-          : (balanceUsd -= t.amountOut * t.rate).toFixed(2),
-      }))
+          ? (balanceUsd += t.amountIn * t.rate)
+          : (balanceUsd -= t.amountOut * t.rate),
+      }));
     },
 
     transferToForm(row) {
-      this.formData = initialFormData(this.currentRates, row)
-      this.formLabels = [...this.labelTitles]
-      this.showForm()
+      this.formData = initialFormData(this.currentRates, row);
+      this.formLabels = [...this.labelTitles];
+      this.showForm();
     },
 
     showForm() {
-      this.isFormVisible = true
+      this.isFormVisible = true;
     },
 
     hideForm() {
-      this.isFormVisible = false
-      this.resetForm()
+      this.isFormVisible = false;
+      this.resetForm();
     },
 
     resetForm() {
-      this.formData = initialFormData(this.currentRates)
-      this.formLabels = [...this.labelTitles]
+      this.formData = initialFormData(this.currentRates);
+      this.formLabels = [...this.labelTitles];
     },
 
     adjustTransferAmountFromAda(e) {
-      const rate = this.formData.rate || 1
-      const value = parseFloat(e.target.value)
-      let amountUSD = ""
+      const rate = this.formData.rate || 1;
+      const value = parseFloat(e.target.value);
+      let amountUSD = "";
       if (value === 0) {
-        amountUSD = 0
+        amountUSD = 0;
       } else if (value) {
-        amountUSD = parseFloat((parseFloat(value) * rate).toFixed(2))
+        amountUSD = parseFloat((parseFloat(value) * rate).toFixed(2));
       }
-      this.formData.amountUSD = amountUSD.toString()
-      this.lastTouchedAmount = "ada"
+      this.formData.amountUSD = amountUSD.toString();
+      this.lastTouchedAmount = "ada";
     },
 
     adjustTransferAmountFromUSD(e) {
-      const rate = this.formData.rate || 1
-      const value = parseFloat(e.target.value)
-      let amount = ""
+      const rate = this.formData.rate || 1;
+      const value = parseFloat(e.target.value);
+      let amount = "";
       if (value === 0) {
-        amount = 0
+        amount = 0;
       } else if (value) {
-        amount = parseFloat((parseFloat(value) / rate).toFixed(2))
+        amount = parseFloat((parseFloat(value) / rate).toFixed(2));
       }
-      this.formData.amount = amount.toString()
-      this.lastTouchedAmount = "usd"
+      this.formData.amount = amount.toString();
+      this.lastTouchedAmount = "usd";
     },
 
     adjustTransferAmountsFromRate(e) {
       const rate = e
         ? parseFloat(e.target.value)
-        : parseFloat(this.formData.rate)
+        : parseFloat(this.formData.rate);
       if (rate) {
         if (this.lastTouchedAmount === "ada") {
-          const adaAmount = parseFloat(this.formData.amount)
-          let usdAmount = ""
+          const adaAmount = parseFloat(this.formData.amount);
+          let usdAmount = "";
           if (adaAmount === 0) {
-            usdAmount = 0
+            usdAmount = 0;
           } else if (adaAmount) {
-            usdAmount = parseFloat((parseFloat(adaAmount) * rate).toFixed(2))
+            usdAmount = parseFloat((parseFloat(adaAmount) * rate).toFixed(2));
           }
-          this.formData.amountUSD = usdAmount.toString()
+          this.formData.amountUSD = usdAmount.toString();
         } else {
-          const usdAmount = parseFloat(this.formData.amountUSD)
-          let adaAmount = ""
+          const usdAmount = parseFloat(this.formData.amountUSD);
+          let adaAmount = "";
           if (usdAmount === 0) {
-            adaAmount = 0
+            adaAmount = 0;
           } else if (usdAmount) {
-            adaAmount = parseFloat((parseFloat(usdAmount) / rate).toFixed(2))
+            adaAmount = parseFloat((parseFloat(usdAmount) / rate).toFixed(2));
           }
-          this.formData.amount = adaAmount.toString()
+          this.formData.amount = adaAmount.toString();
         }
       }
     },
 
     enterButtonHandler(e) {
       if (this.isFormUpdate && e.keyCode === 13) {
-        this.submitUpdate()
+        this.submitUpdate();
       }
     },
 
     submitUpdate() {
-      this.transferEdit()
-      this.hideForm()
-      this.adjustBalance()
+      this.transferEdit();
+      this.hideForm();
+      this.adjustBalance();
     },
 
     submitAddSent() {
       if (this.formData.amount) {
-        this.transferAdd("out")
-        this.adjustBalance()
+        this.transferAdd("out");
+        this.adjustBalance();
       }
-      this.hideForm()
+      this.hideForm();
     },
 
     submitAddReceive() {
       if (this.formData.amount) {
-        this.transferAdd("in")
-        this.adjustBalance()
+        this.transferAdd("in");
+        this.adjustBalance();
       }
-      this.hideForm()
+      this.hideForm();
     },
 
     makePayment() {
-      alert("Not implemented yet.")
+      alert("Not implemented yet.");
     },
   },
 
   watch: {
     isPaidAccount(isPaidAccount) {
       if (!isPaidAccount) {
-        this.enabledTokensCodes = ["ada"]
+        this.enabledTokensCodes = ["ada"];
         if (
-          this.transfers.filter(({tokenCode}) => tokenCode !== "ada").length
+          this.transfers.filter(({ tokenCode }) => tokenCode !== "ada").length
         ) {
-          this.newProject()
+          this.newProject();
         }
       }
     },
 
     geckoApiTokensIds() {
-      this.loadCurrentRate()
+      this.loadCurrentRate();
     },
 
     "formData.tokenCode": {
       handler: function (tokenCode, oldTokenCode) {
         if (this.isFormVisible && tokenCode !== oldTokenCode) {
-          this.formData.rate = this.currentRates[tokenCode]
-          this.adjustTransferAmountsFromRate()
+          this.formData.rate = this.currentRates[tokenCode];
+          this.adjustTransferAmountsFromRate();
         }
       },
     },
   },
 
   mounted() {
-    this.loadFromAPI()
-    this.loadCurrentRate()
+    this.loadFromAPI();
+    this.loadCurrentRate();
   },
-}
+};
 </script>
 
 <style lang="scss" scoped>
@@ -1020,6 +1115,10 @@ ul li button {
   margin: 0 8px 0 4px;
   height: 17px;
   vertical-align: baseline;
+}
+
+hr {
+  margin: 0.25rem 0;
 }
 
 .actionButtons {
