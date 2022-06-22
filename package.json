@@ -10,6 +10,7 @@
     "sb:build": "build-storybook"
   },
   "dependencies": {
+    "buefy": "^0.9.21",
     "core-js": "^3.8.3",
     "lodash": "^4.17.21",
     "vue": "^2.6.14",
