@@ -470,10 +470,10 @@ const coinGeckoTokensCodes = {
   hosky: "hosky",
   iagon: "iagon",
   meld: "meld",
-  "nft-maker": "nft-maker",
+  nftm: "nft-maker",
   nitroex: "nitroex",
   pavia: "pavia",
-  "world-mobile-token": "world-mobile-token",
+  wmtoken: "world-mobile-token",
 };
 
 const coinGeckoTokensCodesReverse = {
@@ -484,10 +484,10 @@ const coinGeckoTokensCodesReverse = {
   hosky: "hosky",
   iagon: "iagon",
   meld: "meld",
-  "nft-maker": "nft-maker",
+  "nft-maker": "nftm",
   nitroex: "nitroex",
   pavia: "pavia",
-  "world-mobile-token": "world-mobile-token",
+  "world-mobile-token": "wmtoken",
 };
 
 function normalizeTransfersFromJSON(transfers) {
@@ -549,7 +549,7 @@ function normalizeTransfersFromCSV(csvArray) {
 }
 
 function initialFormData(currentRates = {}, initials = {}) {
-  const tokenCode = initials.tokenCode || "ada";
+  const tokenCode = initials.tokenCode || "";
   const rate = initials.rate || currentRates[tokenCode] || 1;
   const amount = initials.amountIn || initials.amountOut || null;
   const amountUSD = amount ? Math.round(amount * rate * 100) / 100 : amount;
@@ -743,6 +743,9 @@ export default {
           this.isProjectNameEditing = false;
           this.transfers = data.transfers;
           this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet);
+          this.formData = initialFormData(this.currentRates, {
+            tokenCode: this.enabledTokensCodes[0] || "",
+          });
           this.isProjectLoaded = true;
           return true;
         } catch {
@@ -855,7 +858,9 @@ export default {
       this.enabledTokensCodes = ["ada"];
       this.isFormVisible = false;
       this.isProjectNameEditing = false;
-      this.formData = initialFormData();
+      this.formData = initialFormData(this.currentRates, {
+        tokenCode: this.enabledTokensCodes[0] || "",
+      });
       this.labelTitles = ["Label"];
       this.defaultLabelTitle = "Label";
       this.formLabels = [this.defaultLabelTitle];
@@ -1030,7 +1035,9 @@ export default {
     },
 
     resetForm() {
-      this.formData = initialFormData(this.currentRates);
+      this.formData = initialFormData(this.currentRates, {
+        tokenCode: this.enabledTokensCodes[0] || "",
+      });
       this.formLabels = [...this.labelTitles];
     },
 

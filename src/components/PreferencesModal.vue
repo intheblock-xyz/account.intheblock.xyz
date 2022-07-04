@@ -9,7 +9,13 @@
         <b-input v-model="projectName" required> </b-input>
       </b-field>
       <b-field label="Tokens" v-if="isPaidAccount">
-        <b-dropdown aria-role="list" v-model="enabledTokensCodes" multiple>
+        <b-dropdown
+          aria-role="list"
+          v-model="enabledTokensCodes"
+          multiple
+          scrollable
+          :max-height="120 + labelTitlesOrder.length * 25"
+        >
           <template #trigger="{ active }">
             <b-button
               :label="`${enabledTokensCodes.length} selected`"
@@ -86,10 +92,10 @@ export default {
         "hosky",
         "iagon",
         "meld",
-        "nft-maker",
+        "nftm",
         "nitroex",
         "pavia",
-        "world-mobile-token",
+        "wmtoken",
       ],
       enabledTokensCodes: this.initials.enabledTokensCodes,
       labelTitles,
