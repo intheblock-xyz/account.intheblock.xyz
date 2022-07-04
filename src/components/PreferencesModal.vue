@@ -88,16 +88,29 @@
 <script>
 const defaultAvailableTokensCodes = [
   "aada",
+  "agix",
   "ada",
   "charli3",
+  "clap",
+  "cneta",
+  "copi",
+  "dana",
+  "emp",
   "gero",
   "hosky",
   "iagon",
+  "lq",
   "meld",
+  "milk",
+  "min",
+  "mint",
   "nftm",
   "nitroex",
   "pavia",
+  "sundae",
+  "vyfi",
   "wmtoken",
+  "yummi",
 ];
 
 export default {
