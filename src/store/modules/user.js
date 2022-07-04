@@ -2,6 +2,7 @@
 const getDefaultState = () => ({
   locale: "en",
   isPaidAccount: false,
+  savedTransfers: {},
 })
 
 const state = getDefaultState()
@@ -10,6 +11,7 @@ const state = getDefaultState()
 const getters = {
   locale: (state) => state.locale,
   isPaidAccount: (state) => state.isPaidAccount,
+  savedTransfers: (state) => state.savedTransfers,
 }
 
 // actions
@@ -25,6 +27,9 @@ const mutations = {
   },
   setFreeAccount(state) {
     state.isPaidAccount = false
+  },
+  setSavedTransfers(state, val) {
+    state.savedTransfers = val
   },
 }
 

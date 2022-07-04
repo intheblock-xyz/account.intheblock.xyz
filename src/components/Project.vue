@@ -610,7 +610,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters("user", ["locale", "isPaidAccount"]),
+    ...mapGetters("user", ["locale", "isPaidAccount", "savedTransfers"]),
 
     isFormUpdate() {
       return this.isFormVisible && !!this.formData.id;
@@ -703,6 +703,27 @@ export default {
   },
 
   methods: {
+    loadFromStore() {
+      if (this.isPaidAccount) {
+        try {
+          const data = JSON.parse(this.savedTransfers);
+          this.projectName = data.projectName;
+          this.labelTitles = labelTitlesFromTransfers(data.transfers);
+          this.formLabels = this.labelTitles;
+          this.defaultLabelTitle = this.labelTitles[0];
+          this.isFormVisible = false;
+          this.isProjectNameEditing = false;
+          this.transfers = data.transfers;
+          this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet);
+          this.isProjectLoaded = true;
+          return true;
+        } catch {
+          void 0;
+        }
+      }
+      return false;
+    },
+
     loadFromAPI() {
       ProjectAPI.project().then((r) => {
         this.projectName = r.data.name;
@@ -776,7 +797,6 @@ export default {
           if (result.success) {
             // const rate = parseFloat(result.data.cardano.usd.toFixed(15))
             // this.currentRate = rate
-            // console.log(
             //   Object.fromEntries(
             //     Object.keys(result.data).map((tokenId) => [
             //       coinGeckoTokensCodesReverse[tokenId],
@@ -898,6 +918,16 @@ export default {
 
     disableProjectNameEditing() {
       this.isProjectNameEditing = false;
+    },
+
+    saveTransfersToStore(transfers) {
+      const data = {
+        projectName: this.projectName,
+        transfers: transfers || this.transfers,
+      };
+      if (this.isPaidAccount) {
+        this.$store.commit("user/setSavedTransfers", JSON.stringify(data));
+      }
     },
 
     projectNameEnterButtonHandler(e) {
@@ -1074,6 +1104,10 @@ export default {
       }
     },
 
+    transfers(transfers) {
+      this.saveTransfersToStore(transfers);
+    },
+
     geckoApiTokensIds() {
       this.loadCurrentRate();
     },
@@ -1089,7 +1123,9 @@ export default {
   },
 
   mounted() {
-    this.newProject();
+    if (!this.loadFromStore()) {
+      this.newProject();
+    }
     this.loadCurrentRate();
   },
 };
