@@ -146,10 +146,7 @@
             v-model="formData.amount"
             @keyup.native="adjustTransferAmountFromAda"
           ></b-input>
-          <p
-            class="control"
-            v-if="enabledTokensCodes.length > 1 && !this.isFormUpdate"
-          >
+          <p class="control" v-if="!this.isFormUpdate">
             <b-dropdown
               aria-role="list"
               v-model="formData.tokenCode"
@@ -171,10 +168,7 @@
               >
             </b-dropdown>
           </p>
-          <p
-            class="control"
-            v-if="enabledTokensCodes.length > 1 && this.isFormUpdate"
-          >
+          <p class="control" v-if="this.isFormUpdate">
             <b-button disabled :label="formData.tokenCode.toUpperCase()" />
           </p>
         </b-field>
@@ -327,7 +321,7 @@
 
         <b-table-column
           custom-key="in"
-          :label="`${multiTokenUI ? 'In' : 'ADA in'}`"
+          :label="`${isMultipleTokensEnabled ? 'In' : 'ADA in'}`"
           v-slot="props"
           numeric
         >
@@ -336,7 +330,7 @@
 
         <b-table-column
           custom-key="out"
-          :label="`${multiTokenUI ? 'Out' : 'ADA out'}`"
+          :label="`${isMultipleTokensEnabled ? 'Out' : 'ADA out'}`"
           v-slot="props"
           numeric
         >
@@ -347,7 +341,7 @@
           field="tokenCode"
           label="Token"
           v-slot="props"
-          v-if="multiTokenUI"
+          v-if="isMultipleTokensEnabled"
         >
           {{ props.row.tokenCode ? props.row.tokenCode.toUpperCase() : "ADA" }}
         </b-table-column>
@@ -359,7 +353,7 @@
           numeric
         >
           {{
-            multiTokenUI
+            isMultipleTokensEnabled
               ? $n(props.row.balanceUsd, "currency")
               : props.row.balance || "&ndash;"
           }}
@@ -381,7 +375,7 @@
 
         <b-table-column
           field="rate"
-          :label="multiTokenUI ? 'Rate' : 'ADA/USD rate'"
+          :label="isMultipleTokensEnabled ? 'Rate' : 'ADA/USD rate'"
           v-slot="props"
           numeric
           sortable
@@ -659,7 +653,7 @@ export default {
     },
 
     isMultipleTokensEnabled() {
-      return this.isPaidAccount && this.enabledTokensCodes.length > 1;
+      return this.isPaidAccount;
     },
 
     multiTokenUI() {
@@ -1095,7 +1089,7 @@ export default {
   },
 
   mounted() {
-    this.loadFromAPI();
+    this.newProject();
     this.loadCurrentRate();
   },
 };
