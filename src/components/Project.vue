@@ -89,7 +89,7 @@
         </li>
         <li>
           <b>Current {{ token.code.toUpperCase() }}/USD rate:</b>
-          {{ currentRates[token.code] ? $n(currentRates[token.code]) : "..." }}
+          {{ currentRates[token.code] ? $n(currentRates[token.code]) : "?" }}
         </li>
       </ul>
     </div>

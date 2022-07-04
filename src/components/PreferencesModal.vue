@@ -8,7 +8,9 @@
       <b-field label="Project name">
         <b-input v-model="projectName" required> </b-input>
       </b-field>
-      <b-field label="Tokens" v-if="isPaidAccount">
+
+      <h5 class="title is-5" v-if="isPaidAccount">Tokens</h5>
+      <b-field v-if="isPaidAccount">
         <b-dropdown
           aria-role="list"
           v-model="enabledTokensCodes"
@@ -37,6 +39,18 @@
           >
         </b-dropdown>
       </b-field>
+
+      <b-field label="Add your token">
+        <b-input v-model="newTokenCode"> </b-input>
+        <p class="buttons">
+          <b-button
+            icon-right="check"
+            :disabled="!newTokenCode.length"
+            @click="tokenAdd"
+          />
+        </p>
+      </b-field>
+
       <h5 class="title is-5">Labels set</h5>
       <div v-for="labelTitle in labelTitlesOrder" v-bind:key="labelTitle">
         <b-field>
@@ -72,6 +86,20 @@
 </template>
 
 <script>
+const defaultAvailableTokensCodes = [
+  "aada",
+  "ada",
+  "charli3",
+  "gero",
+  "hosky",
+  "iagon",
+  "meld",
+  "nftm",
+  "nitroex",
+  "pavia",
+  "wmtoken",
+];
+
 export default {
   props: ["initials", "isPaidAccount", "presistedTokensCodes"],
 
@@ -82,22 +110,18 @@ export default {
       labelTitles[title] = title;
       labelTitlesOrder.push(title);
     });
+    const availableTokensCodes = Array.from(
+      new Set([
+        ...defaultAvailableTokensCodes,
+        ...this.initials.enabledTokensCodes,
+      ])
+    );
+    availableTokensCodes.sort((a, b) => a.localeCompare(b));
     return {
       projectName: this.initials.projectName,
-      availableTokensCodes: [
-        "aada",
-        "ada",
-        "charli3",
-        "gero",
-        "hosky",
-        "iagon",
-        "meld",
-        "nftm",
-        "nitroex",
-        "pavia",
-        "wmtoken",
-      ],
+      availableTokensCodes,
       enabledTokensCodes: this.initials.enabledTokensCodes,
+      newTokenCode: "",
       labelTitles,
       labelTitlesOrder,
     };
@@ -113,6 +137,17 @@ export default {
     labelRemove(key) {
       delete this.labelTitles[key];
       this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1);
+    },
+
+    tokenAdd() {
+      const newToken = this.newTokenCode;
+      if (!this.availableTokensCodes.includes(newToken)) {
+        const availableTokensCodes = [...this.availableTokensCodes, newToken];
+        availableTokensCodes.sort((a, b) => a.localeCompare(b));
+        this.availableTokensCodes = availableTokensCodes;
+        this.enabledTokensCodes.push(newToken);
+        this.newTokenCode = "";
+      }
     },
   },
 };
