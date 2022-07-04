@@ -1101,6 +1101,10 @@ export default {
         if (!isAdaOnly) {
           this.newProject();
         }
+      } else {
+        if (!this.transfers.length) {
+          this.loadFromStore();
+        }
       }
     },
 
