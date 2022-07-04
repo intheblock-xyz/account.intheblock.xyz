@@ -1147,6 +1147,10 @@ export default {
       this.saveTransfersToStore(transfers);
     },
 
+    projectName() {
+      this.saveTransfersToStore();
+    },
+
     geckoApiTokensIds() {
       this.loadCurrentRate();
     },
