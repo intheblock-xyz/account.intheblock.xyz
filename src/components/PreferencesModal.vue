@@ -10,7 +10,7 @@
       </b-field>
       <b-field label="Tokens" v-if="isPaidAccount">
         <b-dropdown aria-role="list" v-model="enabledTokensCodes" multiple>
-          <template #trigger="{active}">
+          <template #trigger="{ active }">
             <b-button
               :label="`${enabledTokensCodes.length} selected`"
               :icon-right="active ? 'menu-up' : 'menu-down'"
@@ -70,32 +70,44 @@ export default {
   props: ["initials", "isPaidAccount", "presistedTokensCodes"],
 
   data() {
-    const labelTitles = {}
-    const labelTitlesOrder = []
+    const labelTitles = {};
+    const labelTitlesOrder = [];
     this.initials.labelTitles.forEach((title) => {
-      labelTitles[title] = title
-      labelTitlesOrder.push(title)
-    })
+      labelTitles[title] = title;
+      labelTitlesOrder.push(title);
+    });
     return {
       projectName: this.initials.projectName,
-      availableTokensCodes: ["ada", "eth", "ltc", "dot"],
+      availableTokensCodes: [
+        "aada",
+        "ada",
+        "charli3",
+        "gero",
+        "hosky",
+        "iagon",
+        "meld",
+        "nft-maker",
+        "nitroex",
+        "pavia",
+        "world-mobile-token",
+      ],
       enabledTokensCodes: this.initials.enabledTokensCodes,
       labelTitles,
       labelTitlesOrder,
-    }
+    };
   },
 
   methods: {
     labelAdd() {
-      const key = Date.now().toString()
-      this.labelTitles[key] = ""
-      this.labelTitlesOrder.push(key)
+      const key = Date.now().toString();
+      this.labelTitles[key] = "";
+      this.labelTitlesOrder.push(key);
     },
 
     labelRemove(key) {
-      delete this.labelTitles[key]
-      this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1)
+      delete this.labelTitles[key];
+      this.labelTitlesOrder.splice(this.labelTitlesOrder.indexOf(key), 1);
     },
   },
-}
+};
 </script>

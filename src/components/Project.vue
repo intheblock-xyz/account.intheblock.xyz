@@ -448,18 +448,46 @@ const sent = (t) => !!t.amountOut;
 
 const sum = (acc, { amountIn, amountOut }) => (acc += amountIn || amountOut);
 
+// const tokensOnGecko = [
+//   "ardana",
+//   "cardano",
+//   "charli3",
+//   "gero",
+//   "hosky",
+//   "iagon",
+//   "meld",
+//   "nft-maker",
+//   "nitroex",
+//   "pavia",
+//   "world-mobile-token",
+// ];
+
 const coinGeckoTokensCodes = {
+  aada: "ardana",
   ada: "cardano",
-  eth: "ethereum",
-  ltc: "litecoin",
-  dot: "polkadot",
+  charli3: "charli3",
+  gero: "gero",
+  hosky: "hosky",
+  iagon: "iagon",
+  meld: "meld",
+  "nft-maker": "nft-maker",
+  nitroex: "nitroex",
+  pavia: "pavia",
+  "world-mobile-token": "world-mobile-token",
 };
 
 const coinGeckoTokensCodesReverse = {
+  ardana: "aada",
   cardano: "ada",
-  ethereum: "eth",
-  litecoin: "ltc",
-  polkadot: "dot",
+  charli3: "charli3",
+  gero: "gero",
+  hosky: "hosky",
+  iagon: "iagon",
+  meld: "meld",
+  "nft-maker": "nft-maker",
+  nitroex: "nitroex",
+  pavia: "pavia",
+  "world-mobile-token": "world-mobile-token",
 };
 
 function normalizeTransfersFromJSON(transfers) {
