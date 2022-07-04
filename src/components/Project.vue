@@ -1095,10 +1095,10 @@ export default {
   watch: {
     isPaidAccount(isPaidAccount) {
       if (!isPaidAccount) {
-        this.enabledTokensCodes = ["ada"];
-        if (
-          this.transfers.filter(({ tokenCode }) => tokenCode !== "ada").length
-        ) {
+        const isAdaOnly =
+          this.transfersTokensCodesSet.size === 1 &&
+          this.transfersTokensCodesSet.has("ada");
+        if (!isAdaOnly) {
           this.newProject();
         }
       }

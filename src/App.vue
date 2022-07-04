@@ -2,7 +2,7 @@
   <div id="app">
     <b-navbar class="is-primary" :mobile-burger="true">
       <template #brand>
-        <b-navbar-item tag="router-link" :to="{name: 'Home'}">
+        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <img
             src="@/assets/images/cardano-aim_white.png"
             alt="Cardano Aim logo"
@@ -12,7 +12,7 @@
       <template #end>
         <b-navbar-item
           tag="router-link"
-          :to="{name: 'Home'}"
+          :to="{ name: 'Home' }"
           :active="currentRoute.name === 'Home'"
         >
           {{ $t("general.MI_DISPERSAL") }}
@@ -56,45 +56,74 @@
 </template>
 
 <script>
-import {mapGetters} from "vuex"
-import langs from "@/locales/locales"
+import { mapGetters } from "vuex";
+import langs from "@/locales/locales";
 
 export default {
   data() {
     return {
       challenges: [],
       langs: langs,
-    }
+    };
   },
 
   computed: {
-    ...mapGetters("user", ["isPaidAccount"]),
+    ...mapGetters("user", ["isPaidAccount", "savedTransfers"]),
 
     currentRoute() {
-      return this.$router.currentRoute
+      return this.$router.currentRoute;
     },
   },
 
   methods: {
     changeLocale(locale) {
-      this.$store.commit("user/setLocale", locale)
-      this.$i18n.locale = locale
-      this.$router.go()
+      this.$store.commit("user/setLocale", locale);
+      this.$i18n.locale = locale;
+      this.$router.go();
     },
 
     signIn() {
-      this.$store.commit("user/setPaidAccount")
+      this.$store.commit("user/setPaidAccount");
     },
 
     signOut() {
-      this.$store.commit("user/setFreeAccount")
+      let transfers = null;
+      try {
+        const data = JSON.parse(this.savedTransfers);
+        transfers = data.transfers;
+      } catch {
+        void 0;
+      }
+
+      if (transfers) {
+        const transfersTokensCodesSet = new Set(
+          transfers.map(({ tokenCode }) => tokenCode)
+        );
+        const isAdaOnly =
+          transfersTokensCodesSet.size === 1 &&
+          transfersTokensCodesSet.has("ada");
+        if (!isAdaOnly) {
+          this.$buefy.dialog.confirm({
+            title: "Signing out",
+            message:
+              "You are leaving a paid account. Transfers will be resetted.",
+            cancelText: "Cancel",
+            confirmText: "Continue",
+            onConfirm: () => this.$store.commit("user/setFreeAccount"),
+          });
+        } else {
+          this.$store.commit("user/setFreeAccount");
+        }
+      } else {
+        this.$store.commit("user/setFreeAccount");
+      }
     },
   },
 
   created() {
-    this.$i18n.locale = this.$store.state.user.locale
+    this.$i18n.locale = this.$store.state.user.locale;
   },
-}
+};
 </script>
 
 <style lang="scss">
