@@ -16,7 +16,7 @@
           v-model="enabledTokensCodes"
           multiple
           scrollable
-          :max-height="120 + labelTitlesOrder.length * 25"
+          :max-height="170 + labelTitlesOrder.length * 25"
         >
           <template #trigger="{ active }">
             <b-button
@@ -40,8 +40,9 @@
         </b-dropdown>
       </b-field>
 
-      <b-field label="Add your token">
-        <b-input v-model="newTokenCode"> </b-input>
+      <b-field>
+        <b-input v-model="newTokenCode" placeholder="Add your token...">
+        </b-input>
         <p class="buttons">
           <b-button
             icon-right="check"
