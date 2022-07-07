@@ -68,7 +68,7 @@ export default {
   },
 
   computed: {
-    ...mapGetters("user", ["isPaidAccount", "savedTransfers"]),
+    ...mapGetters("user", ["isPaidAccount", "savedTransfersPaid"]),
 
     currentRoute() {
       return this.$router.currentRoute;
@@ -89,7 +89,7 @@ export default {
     signOut() {
       let transfers = null;
       try {
-        const data = JSON.parse(this.savedTransfers);
+        const data = JSON.parse(this.savedTransfersPaid);
         transfers = data.transfers;
       } catch {
         void 0;

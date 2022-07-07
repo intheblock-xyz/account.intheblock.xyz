@@ -40,7 +40,7 @@
         </b-dropdown>
       </b-field>
 
-      <b-field>
+      <b-field v-if="isPaidAccount">
         <b-input v-model="newTokenCode" placeholder="Add your token...">
         </b-input>
         <p class="buttons">

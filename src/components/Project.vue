@@ -109,7 +109,10 @@
         </li>
       </ul>
     </div>
-    <div v-if="isProjectLoaded" class="column is-12">
+    <div
+      v-if="isProjectLoaded && Object.keys(geckoApiTokensIds).length"
+      class="column is-12"
+    >
       <div class="buttons">
         <b-button
           @click="loadCurrentRate"
@@ -664,7 +667,12 @@ export default {
   },
 
   computed: {
-    ...mapGetters("user", ["locale", "isPaidAccount", "savedTransfers"]),
+    ...mapGetters("user", [
+      "locale",
+      "isPaidAccount",
+      "savedTransfersPaid",
+      "savedTransfersFree",
+    ]),
 
     isFormUpdate() {
       return this.isFormVisible && !!this.formData.id;
@@ -758,26 +766,34 @@ export default {
 
   methods: {
     loadFromStore() {
-      if (this.isPaidAccount) {
-        try {
-          const data = JSON.parse(this.savedTransfers);
-          this.projectName = data.projectName;
+      // if (this.isPaidAccount) {
+      try {
+        const data = JSON.parse(
+          this.isPaidAccount ? this.savedTransfersPaid : this.savedTransfersFree
+        );
+        this.projectName = data.projectName;
+        if (data.transfers && data.transfers.length) {
           this.labelTitles = labelTitlesFromTransfers(data.transfers);
-          this.formLabels = this.labelTitles;
-          this.defaultLabelTitle = this.labelTitles[0];
-          this.isFormVisible = false;
-          this.isProjectNameEditing = false;
           this.transfers = data.transfers;
           this.enabledTokensCodes = Array.from(this.transfersTokensCodesSet);
-          this.formData = initialFormData(this.currentRates, {
-            tokenCode: this.enabledTokensCodes[0] || "",
-          });
-          this.isProjectLoaded = true;
-          return true;
-        } catch {
-          void 0;
+        } else {
+          this.labelTitles = ["Label"];
+          this.transfers = [];
+          this.enabledTokensCodes = ["ada"];
         }
+        this.formLabels = this.labelTitles;
+        this.defaultLabelTitle = this.labelTitles[0] || null;
+        this.isFormVisible = false;
+        this.isProjectNameEditing = false;
+        this.formData = initialFormData(this.currentRates, {
+          tokenCode: this.enabledTokensCodes[0] || "",
+        });
+        this.isProjectLoaded = true;
+        return true;
+      } catch {
+        void 0;
       }
+      // }
       return false;
     },
 
@@ -985,7 +1001,9 @@ export default {
         transfers: transfers || this.transfers,
       };
       if (this.isPaidAccount) {
-        this.$store.commit("user/setSavedTransfers", JSON.stringify(data));
+        this.$store.commit("user/setSavedTransfersPaid", JSON.stringify(data));
+      } else {
+        this.$store.commit("user/setSavedTransfersFree", JSON.stringify(data));
       }
     },
 
@@ -1160,11 +1178,20 @@ export default {
           this.transfersTokensCodesSet.size === 1 &&
           this.transfersTokensCodesSet.has("ada");
         if (!isAdaOnly) {
-          this.newProject();
+          if (!this.loadFromStore()) {
+            this.newProject();
+          }
+        } else {
+          this.saveTransfersToStore();
         }
+        this.enabledTokensCodes = ["ada"];
       } else {
-        if (!this.transfers.length) {
-          this.loadFromStore();
+        if (!this.loadFromStore()) {
+          if (!this.transfers.length) {
+            this.newProject();
+          } else {
+            this.saveTransfersToStore();
+          }
         }
       }
     },
@@ -1177,8 +1204,10 @@ export default {
       this.saveTransfersToStore();
     },
 
-    geckoApiTokensIds() {
-      this.loadCurrentRate();
+    geckoApiTokensIds(geckoApiTokensIds) {
+      if (Object.keys(geckoApiTokensIds).length) {
+        this.loadCurrentRate();
+      }
     },
 
     "formData.tokenCode": {
@@ -1195,7 +1224,9 @@ export default {
     if (!this.loadFromStore()) {
       this.newProject();
     }
-    this.loadCurrentRate();
+    if (Object.keys(this.geckoApiTokensIds).length) {
+      this.loadCurrentRate();
+    }
   },
 };
 </script>
