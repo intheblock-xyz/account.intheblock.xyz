@@ -100,8 +100,9 @@ export default {
           transfers.map(({ tokenCode }) => tokenCode)
         );
         const isAdaOnly =
-          transfersTokensCodesSet.size === 1 &&
-          transfersTokensCodesSet.has("ada");
+          transfersTokensCodesSet.size === 0 ||
+          (transfersTokensCodesSet.size === 1 &&
+            transfersTokensCodesSet.has("ada"));
         if (!isAdaOnly) {
           this.$buefy.dialog.confirm({
             title: "Signing out",
