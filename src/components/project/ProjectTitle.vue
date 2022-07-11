@@ -1,6 +1,10 @@
 <template>
   <div class="project-title">
-    <h2 class="title is-2" v-if="!isProjectTitleEditing">
+    <h2
+      class="title is-2"
+      :class="projectTitle ? '' : 'title-empty'"
+      v-if="!isProjectTitleEditing"
+    >
       <span @click="showTitleEditInput">{{
         projectTitle || "[untitled project]"
       }}</span>
