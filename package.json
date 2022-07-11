@@ -5,9 +5,7 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "sb:run": "start-storybook -p 6006 --no-open",
-    "sb:build": "build-storybook"
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "buefy": "^0.9.21",
@@ -19,14 +17,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.18.5",
-    "@storybook/addon-actions": "^6.5.9",
-    "@storybook/addon-essentials": "^6.5.9",
-    "@storybook/addon-interactions": "^6.5.9",
-    "@storybook/addon-links": "^6.5.9",
-    "@storybook/builder-webpack5": "^6.5.9",
-    "@storybook/manager-webpack5": "^6.5.9",
-    "@storybook/testing-library": "^0.0.13",
-    "@storybook/vue": "^6.5.9",
     "@types/lodash": "^4.14.182",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
@@ -37,17 +27,14 @@
     "@vue/cli-plugin-vuex": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "@vue/eslint-config-typescript": "^9.1.0",
-    "babel-loader": "^8.2.5",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-storybook": "^0.5.12",
     "eslint-plugin-vue": "^8.0.3",
     "prettier": "^2.4.1",
     "sass": "^1.32.7",
     "sass-loader": "^12.0.0",
     "typescript": "~4.5.5",
-    "vue-loader": "15.9.8",
     "vue-template-compiler": "^2.6.14"
   }
 }
