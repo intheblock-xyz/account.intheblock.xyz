@@ -8,7 +8,7 @@
         />
       </b-navbar-item>
     </template>
-    <template #start>
+    <!-- <template #start>
       <b-navbar-item
         tag="router-link"
         :to="{ name: 'home' }"
@@ -16,7 +16,7 @@
       >
         Dispersal Tool
       </b-navbar-item>
-    </template>
+    </template> -->
     <template #end>
       <b-navbar-item tag="div">
         <b-tag v-if="isFreeAccount" size="is-medium" type="is-warning">
@@ -82,8 +82,10 @@ export default Vue.extend({
     }
   }
 
-  .navbar-menu {
-    margin-left: 0.5rem;
+  @media screen and (min-width: 1024px) {
+    .navbar-menu {
+      margin-left: 0.5rem;
+    }
   }
 }
 </style>
