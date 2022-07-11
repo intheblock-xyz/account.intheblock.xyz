@@ -36,10 +36,10 @@ export default Vue.extend({
   components: {},
   methods: {
     newProject() {
-      alert("new project");
+      this.$store.dispatch("project/new");
     },
     showPreferences() {
-      alert("show preferences");
+      this.$store.dispatch("ui/showPreferencesModal");
     },
     importFromFile() {
       alert("import from file");

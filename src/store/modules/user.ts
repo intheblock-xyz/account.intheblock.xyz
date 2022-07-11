@@ -14,8 +14,6 @@ const getters = {
   isPaidAccount: (state: IUserStore) => state.accountType === "paid",
 };
 
-const actions = {};
-
 const mutations = {
   setFreeAccount(state: IUserStore) {
     state.accountType = "free";
@@ -25,10 +23,12 @@ const mutations = {
   },
 };
 
+const actions = {};
+
 export default {
   namespaced: true,
   state,
   getters,
-  actions,
   mutations,
+  actions,
 };
