@@ -45,7 +45,7 @@ import Vue from "vue";
 import { mapGetters } from "vuex";
 
 export default Vue.extend({
-  name: "ProjectTitle",
+  name: "PreferencesModal",
 
   data() {
     return {
