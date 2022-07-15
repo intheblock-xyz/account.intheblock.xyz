@@ -3,7 +3,7 @@
     <component
       :is="tagName"
       :class="{
-        'a-editable-text_is-empty': title,
+        'a-editable-text_is-empty': !title,
         ...Object.fromEntries(
           classes
             .split(' ')
@@ -46,7 +46,7 @@ export default Vue.extend({
     titlePlaceholder: {
       type: String,
       required: false,
-      default: "[empty]",
+      default: "[click to edit...]",
     },
 
     tagName: {
