@@ -8,7 +8,7 @@
     </div>
     <div class="column is-6">
       <div class="buttons is-right">
-        <b-button @click="importFromFile">Import from File</b-button>
+        <b-button @click="importFile">Import from File</b-button>
         <b-dropdown aria-role="list" position="is-bottom-left">
           <template #trigger="{ active }">
             <b-button
@@ -16,10 +16,10 @@
               :icon-right="active ? 'menu-up' : 'menu-down'"
             />
           </template>
-          <b-dropdown-item aria-role="listitem" @click="exportToJSON"
+          <b-dropdown-item aria-role="listitem" @click="exportJson"
             >JSON</b-dropdown-item
           >
-          <b-dropdown-item aria-role="listitem" @click="exportToCSV"
+          <b-dropdown-item aria-role="listitem" @click="exportCsv"
             >CSV</b-dropdown-item
           >
         </b-dropdown>
@@ -33,22 +33,26 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "ProjectToolbar",
-  components: {},
+
   methods: {
     newProject() {
-      this.$store.dispatch("project/new");
+      this.$emit("newProject");
     },
+
     showPreferences() {
-      this.$store.dispatch("ui/showPreferencesModal");
+      this.$emit("showPreferences");
     },
-    importFromFile() {
-      alert("import from file");
+
+    importFile() {
+      this.$emit("importFile");
     },
-    exportToJSON() {
-      alert("export to JSON");
+
+    exportJson() {
+      this.$emit("exportJson");
     },
-    exportToCSV() {
-      alert("export to CSV");
+
+    exportCsv() {
+      this.$emit("exportCsv");
     },
   },
 });
