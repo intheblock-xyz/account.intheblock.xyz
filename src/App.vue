@@ -1,6 +1,6 @@
 <template>
   <div>
-    <PageHeader />
+    <PageHeader :isSignedIn="isSignedIn" @signIn="signIn" @signOut="signOut" />
     <RouterView />
   </div>
 </template>
@@ -14,6 +14,22 @@ export default Vue.extend({
 
   components: {
     PageHeader,
+  },
+
+  data() {
+    return {
+      isSignedIn: false,
+    };
+  },
+
+  methods: {
+    signIn() {
+      this.isSignedIn = true;
+    },
+
+    signOut() {
+      this.isSignedIn = false;
+    },
   },
 });
 </script>

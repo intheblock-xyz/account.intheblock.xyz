@@ -55,6 +55,7 @@ export default Vue.extend({
       this.title = title;
     },
 
+    // project toolbar
     newProject() {
       this.title = "New Project";
     },
@@ -90,6 +91,7 @@ export default Vue.extend({
       alert("exportCsv");
     },
 
+    // project actions
     addTransaction() {
       alert("addTransaction");
     },

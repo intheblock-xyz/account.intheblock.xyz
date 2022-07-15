@@ -8,31 +8,24 @@
         />
       </b-navbar-item>
     </template>
-    <!-- <template #start>
-      <b-navbar-item
-        tag="router-link"
-        :to="{ name: 'home' }"
-        :active="currentRoute.name === 'home'"
-      >
-        Dispersal Tool
-      </b-navbar-item>
-    </template> -->
     <template #end>
       <b-navbar-item tag="div">
-        <b-tag v-if="isFreeAccount" size="is-medium" type="is-warning">
-          Free Account
-        </b-tag>
-        <b-tag v-if="isPaidAccount" size="is-medium" type="is-success">
+        <b-tag v-if="isSignedIn" size="is-medium" type="is-success">
           Paid Account
         </b-tag>
+        <b-tag v-else size="is-medium" type="is-warning">Free Account</b-tag>
       </b-navbar-item>
       <b-navbar-item tag="div">
         <div class="buttons">
-          <a class="button is-light" v-if="isFreeAccount" @click="signIn">
-            Sign in
-          </a>
-          <a class="button is-light" v-if="isPaidAccount" @click="signOut">
+          <a
+            class="button is-light"
+            v-if="isSignedIn"
+            @click="$emit('signOut')"
+          >
             Sign out
+          </a>
+          <a class="button is-light" v-else @click="$emit('signIn')">
+            Sign in
           </a>
         </div>
       </b-navbar-item>
@@ -42,27 +35,21 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { mapGetters } from "vuex";
 import { Route } from "vue-router";
 
 export default Vue.extend({
   name: "PageHeader",
 
-  computed: {
-    ...mapGetters("user", ["isFreeAccount", "isPaidAccount"]),
-
-    currentRoute(): Route {
-      return this.$router.currentRoute;
+  props: {
+    isSignedIn: {
+      type: Boolean,
+      required: true,
     },
   },
 
-  methods: {
-    signIn() {
-      this.$store.commit("user/setPaidAccount");
-    },
-
-    signOut() {
-      this.$store.commit("user/setFreeAccount");
+  computed: {
+    currentRoute(): Route {
+      return this.$router.currentRoute;
     },
   },
 });
