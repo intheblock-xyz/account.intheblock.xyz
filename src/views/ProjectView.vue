@@ -28,12 +28,23 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { v4 as uuidv4 } from "uuid";
+import { getLastEditedProject, IProject, saveProject } from "@/core/project";
 import EditableText from "@/components/form/EditableText.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
 import PreferencesModal, {
   IProjectPreferences,
 } from "@/components/layout/PreferencesModal.vue";
 import ProjectActions from "@/components/project/ProjectActions.vue";
+
+function getNewProject(): IProject {
+  return {
+    uuid: uuidv4(),
+    title: "New Project",
+    createdAt: Date.now(),
+    editedAt: Date.now(),
+  };
+}
 
 export default Vue.extend({
   name: "ProjectView",
@@ -46,18 +57,51 @@ export default Vue.extend({
 
   data() {
     return {
+      uuid: "",
       title: "",
+      createdAt: 0,
+      editedAt: 0,
+      isLoaded: false,
     };
   },
 
+  computed: {
+    essentials(): [string] {
+      return [this.title];
+    },
+
+    toSave(): IProject {
+      return {
+        uuid: this.uuid,
+        title: this.title,
+        createdAt: this.createdAt,
+        editedAt: this.editedAt,
+      };
+    },
+  },
+
   methods: {
+    load(project: IProject) {
+      this.isLoaded = false;
+      Object.assign(this, project);
+      this.$nextTick(() => (this.isLoaded = true));
+    },
+
     updateTitle(title: string) {
       this.title = title;
     },
 
+    touchEditedTimestamp() {
+      this.editedAt = Date.now();
+    },
+
+    saveToLocalStorage() {
+      saveProject(this.toSave);
+    },
+
     // project toolbar
     newProject() {
-      this.title = "New Project";
+      this.load(getNewProject());
     },
 
     showPreferences() {
@@ -99,6 +143,24 @@ export default Vue.extend({
     makePayment() {
       alert("makePayment");
     },
+  },
+
+  watch: {
+    essentials() {
+      if (this.isLoaded) {
+        this.touchEditedTimestamp();
+        this.saveToLocalStorage();
+      }
+    },
+  },
+
+  created() {
+    const storedProject = getLastEditedProject();
+    if (storedProject === null) {
+      this.newProject();
+    } else {
+      this.load(storedProject);
+    }
   },
 });
 </script>
