@@ -10,6 +10,7 @@
           v-model="title"
           placeholder="[untitled project]"
           ref="projectTitleInput"
+          @keypress.native.enter="submit"
         >
         </b-input>
       </b-field>

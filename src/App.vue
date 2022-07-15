@@ -1,7 +1,7 @@
 <template>
   <div>
     <PageHeader />
-    <router-view></router-view>
+    <RouterView />
   </div>
 </template>
 
@@ -11,6 +11,7 @@ import PageHeader from "@/components/layout/PageHeader.vue";
 
 export default Vue.extend({
   name: "App",
+
   components: {
     PageHeader,
   },

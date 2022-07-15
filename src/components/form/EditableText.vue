@@ -30,7 +30,7 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
 import Vue from "vue";
 
 export default Vue.extend({
@@ -115,7 +115,7 @@ export default Vue.extend({
 
     setInputFocus() {
       if (this.$refs.input) {
-        this.$refs.input.focus();
+        (this.$refs.input as HTMLInputElement).focus();
       }
     },
 

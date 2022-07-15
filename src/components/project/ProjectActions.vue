@@ -5,13 +5,13 @@
         <b-button
           icon-left="plus-thick"
           type="is-primary"
-          @click="addTransaction"
+          @click="$emit('addTransaction')"
           >Add transaction</b-button
         >
         <b-button
           icon-left="cash-multiple"
           type="is-primary"
-          @click="makePayment"
+          @click="$emit('makePayment')"
           >Make payment</b-button
         >
       </div>
@@ -24,14 +24,5 @@ import Vue from "vue";
 
 export default Vue.extend({
   name: "ProjectActions",
-  components: {},
-  methods: {
-    addTransaction() {
-      alert("add trnasaction");
-    },
-    makePayment() {
-      alert("make payment");
-    },
-  },
 });
 </script>

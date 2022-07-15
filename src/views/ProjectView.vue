@@ -1,7 +1,13 @@
 <template>
   <div id="project-root" class="section container">
     <h1 class="title is-1">AIM Dispersal Tool</h1>
-    <ProjectToolbar @newProject="newProject" @showPreferences="preferences" />
+    <ProjectToolbar
+      @newProject="newProject"
+      @showPreferences="showPreferences"
+      @importFile="importFile"
+      @exportJson="exportJson"
+      @exportCsv="exportCsv"
+    />
     <EditableText
       :title="title"
       @submit="updateTitle"
@@ -13,7 +19,10 @@
       submitOnBlur
     />
     <hr />
-    <ProjectActions />
+    <ProjectActions
+      @addTransaction="addTransaction"
+      @makePayment="makePayment"
+    />
   </div>
 </template>
 
@@ -50,7 +59,7 @@ export default Vue.extend({
       this.title = "New Project";
     },
 
-    preferences() {
+    showPreferences() {
       this.$buefy.modal.open({
         parent: this,
         component: PreferencesModal,
@@ -67,6 +76,26 @@ export default Vue.extend({
     preferencesSubmit(formData: IProjectPreferences) {
       const { title } = formData;
       this.title = title;
+    },
+
+    importFile() {
+      alert("importFile");
+    },
+
+    exportJson() {
+      alert("exportJson");
+    },
+
+    exportCsv() {
+      alert("exportCsv");
+    },
+
+    addTransaction() {
+      alert("addTransaction");
+    },
+
+    makePayment() {
+      alert("makePayment");
     },
   },
 });
