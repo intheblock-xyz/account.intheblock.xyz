@@ -38,7 +38,6 @@
 
 <script lang="ts">
 import Vue from "vue";
-import moment from "moment";
 import { getTransactionForm, TTransactionDirection } from "@/core/transaction";
 
 export default Vue.extend({
@@ -55,17 +54,6 @@ export default Vue.extend({
     return getTransactionForm(this.transaction);
   },
 
-  computed: {
-    // processedAt: {
-    //   get() {
-    //     return moment(this.values.processedAt).toDate();
-    //   },
-    //   set(value) {
-    //     this.values.processedAt = moment(value).unix() * 1000;
-    //   },
-    // },
-  },
-
   methods: {
     submit(transactionDirection?: TTransactionDirection) {
       this.$emit("submit", {
@@ -77,11 +65,5 @@ export default Vue.extend({
       });
     },
   },
-
-  // watch: {
-  //   processedAt() {
-  //     this.$emit("update", { fieldName: "processedAt" });
-  //   },
-  // },
 });
 </script>
