@@ -1,19 +1,84 @@
 import { chain } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 import {
   localStorageLoad,
   localStorageSave,
   TLocalStorageKey,
 } from "@/lib/localStorage";
+import { ITransaction, ITransactionForm } from "./transaction";
 
 export interface IProject {
   uuid: string;
   title: string;
   createdAt: number;
   editedAt: number;
+  transactions: ITransaction[];
+}
+
+export interface IProjectData extends IProject {
+  isLoaded: boolean;
+  isFormVisible: boolean;
+  editingTransaction: ITransaction | null;
 }
 
 const LS_PROJECT_KEY = "project";
 const LS_PROJECTS_UUIDS_KEY = "projectsUuids";
+
+export function getNewProject(): IProject {
+  const now = Date.now();
+  return {
+    uuid: uuidv4(),
+    title: "New Project",
+    createdAt: now,
+    editedAt: now,
+    transactions: [
+      {
+        uuid: uuidv4(),
+        createdAt: now,
+        editedAt: now,
+        processedAt: now,
+        rows: [
+          {
+            uuid: uuidv4(),
+            createdAt: now,
+            editedAt: now,
+            processedAt: now,
+            amount: 350,
+            currency: { ticker: "ada" },
+            labels: [{ title: "Label", text: "TEST LABEL 1.1" }],
+          },
+          {
+            uuid: uuidv4(),
+            createdAt: now,
+            editedAt: now,
+            processedAt: now,
+            amount: 68.267,
+            currency: { ticker: "ada" },
+            labels: [{ title: "Label", text: "TEST LABEL 1.2" }],
+          },
+        ],
+        rates: [
+          {
+            currency: { ticker: "ada" },
+            currencyVs: { ticker: "usd" },
+            value: 0.5,
+          },
+        ],
+        labels: [{ title: "Label", text: "TEST LABEL 1" }],
+      },
+    ],
+  };
+}
+
+export function serializeProject(projectData: IProjectData): IProject {
+  return {
+    uuid: projectData.uuid,
+    title: projectData.title,
+    createdAt: projectData.createdAt,
+    editedAt: projectData.editedAt,
+    transactions: projectData.transactions,
+  };
+}
 
 function getProjectKey(uuid: string): TLocalStorageKey {
   return [LS_PROJECT_KEY, uuid];

@@ -19,7 +19,13 @@
       submitOnBlur
     />
     <hr />
+    <TransactionForm
+      v-if="isFormVisible"
+      @submit="handleTransactionFormSubmit"
+      @cancel="hideTransactionForm"
+    />
     <ProjectActions
+      v-else
       @addTransaction="addTransaction"
       @makePayment="makePayment"
     />
@@ -28,23 +34,27 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { v4 as uuidv4 } from "uuid";
-import { getLastEditedProject, IProject, saveProject } from "@/core/project";
+import {
+  getLastEditedProject,
+  getNewProject,
+  IProject,
+  IProjectData,
+  saveProject,
+  serializeProject,
+} from "@/core/project";
+import {
+  cleanTransactionFormValues,
+  getTransactionForm,
+  ITransaction,
+  ITransactionFormSubmit,
+} from "@/core/transaction";
 import EditableText from "@/components/form/EditableText.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
 import PreferencesModal, {
   IProjectPreferences,
 } from "@/components/layout/PreferencesModal.vue";
 import ProjectActions from "@/components/project/ProjectActions.vue";
-
-function getNewProject(): IProject {
-  return {
-    uuid: uuidv4(),
-    title: "New Project",
-    createdAt: Date.now(),
-    editedAt: Date.now(),
-  };
-}
+import TransactionForm from "@/components/transaction/TransactionForm.vue";
 
 export default Vue.extend({
   name: "ProjectView",
@@ -53,30 +63,30 @@ export default Vue.extend({
     EditableText,
     ProjectActions,
     ProjectToolbar,
+    TransactionForm,
   },
 
   data() {
-    return {
+    const data: IProjectData = {
       uuid: "",
       title: "",
       createdAt: 0,
       editedAt: 0,
+      transactions: [],
       isLoaded: false,
+      isFormVisible: false,
+      editingTransaction: null,
     };
+    return data;
   },
 
   computed: {
-    essentials(): [string] {
-      return [this.title];
+    essentials(): [string, ITransaction[]] {
+      return [this.title, this.transactions];
     },
 
     toSave(): IProject {
-      return {
-        uuid: this.uuid,
-        title: this.title,
-        createdAt: this.createdAt,
-        editedAt: this.editedAt,
-      };
+      return serializeProject(this);
     },
   },
 
@@ -137,11 +147,49 @@ export default Vue.extend({
 
     // project actions
     addTransaction() {
-      alert("addTransaction");
+      this.showTransactionForm();
     },
 
     makePayment() {
-      alert("makePayment");
+      alert("Not implemented yet");
+    },
+
+    // transactions
+    showTransactionForm(transaction?: ITransaction) {
+      this.isFormVisible = true;
+      if (transaction) {
+        this.editingTransaction = transaction;
+      }
+    },
+
+    hideTransactionForm() {
+      this.isFormVisible = false;
+    },
+
+    handleTransactionFormSubmit(transactionFormSubmit: ITransactionFormSubmit) {
+      const { formData, transaction, transactionDirection } =
+        transactionFormSubmit;
+
+      if (!transaction && !transactionDirection) {
+        throw new Error("Missed new transaction direction");
+      }
+
+      if (!transaction) {
+        this.transactions.push(cleanTransactionFormValues(formData));
+      } else {
+        const transactionUuid = transaction.uuid;
+        const transactionIndex = this.transactions.findIndex(
+          ({ uuid }) => uuid === transactionUuid,
+        );
+
+        this.transactions.splice(
+          transactionIndex,
+          1,
+          cleanTransactionFormValues(formData, transaction),
+        );
+      }
+
+      this.hideTransactionForm();
     },
   },
 
