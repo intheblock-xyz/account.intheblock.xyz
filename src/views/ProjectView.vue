@@ -82,10 +82,22 @@ export default Vue.extend({
   },
 
   computed: {
+    transactionsCurrencyTickers(): Set<string> {
+      return this.transactions.reduce((tickers, transaction) => {
+        transaction.rows.forEach(({ currency }) => {
+          tickers.add(currency.ticker);
+        });
+        return tickers;
+      }, new Set<string>());
+    },
+
     transactionsLabelTitles(): Set<string> {
-      return this.transactions.reduce((acc, transaction) => {
-        transaction.labels.forEach(({ title }) => acc.add(title));
-        return acc;
+      return this.transactions.reduce((titles, transaction) => {
+        transaction.labels.forEach(({ title }) => titles.add(title));
+        transaction.rows.forEach(({ labels }) => {
+          labels.forEach(({ title }) => titles.add(title));
+        });
+        return titles;
       }, new Set<string>());
     },
 
