@@ -69,7 +69,7 @@ import Vue from "vue";
 import {
   getLastEditedProject,
   getNewProject,
-  IProject,
+  IProjectSerialized,
   IProjectData,
   IProjectPreferences,
   saveProject,
@@ -140,8 +140,15 @@ export default Vue.extend({
   },
 
   methods: {
-    load(project: IProject) {
-      const { uuid, title, createdAt, editedAt, transactions } = project;
+    load(project: IProjectSerialized) {
+      const {
+        uuid,
+        title,
+        createdAt,
+        editedAt,
+        transactions,
+        projectLabelTitles,
+      } = project;
 
       this.isLoaded = false;
       this.uuid = uuid;
@@ -150,9 +157,7 @@ export default Vue.extend({
       this.editedAt = editedAt;
       this.transactions = transactions;
 
-      this.projectLabelTitles = new Set<string>(
-        Array.from(this.transactionsLabelTitles),
-      );
+      this.projectLabelTitles = new Set<string>(projectLabelTitles);
 
       this.$nextTick(() => (this.isLoaded = true));
     },
