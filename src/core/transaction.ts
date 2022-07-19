@@ -19,6 +19,8 @@ interface ITransactionLabel {
   text: string;
 }
 
+type TLabelsTuple = [string[], string[]];
+
 export interface ITransaction {
   uuid: string;
   createdAt: number;
@@ -67,16 +69,23 @@ export interface ITransactionRowForm {
 }
 
 export function getTransactionForm(
+  projectLabelTitles: Set<string>,
   transaction?: ITransaction,
 ): ITransactionForm {
-  const [labelTitles, labelTexts] = transaction?.labels.reduce(
-    (acc, cur) => {
-      acc[0].push(cur.title);
-      acc[1].push(cur.text);
-      return acc;
-    },
-    [[], []] as [string[], string[]],
-  ) || [[], []];
+  function reduceLabels(acc: TLabelsTuple, title: string): TLabelsTuple {
+    const text = transaction?.labels.find(
+      (label) => label.title === title,
+    )?.text;
+    acc[0].push(title);
+    acc[1].push(text || "");
+    return acc;
+  }
+
+  const blankLabelsTuple: TLabelsTuple = [[], []];
+
+  const [labelTitles, labelTexts] =
+    Array.from(projectLabelTitles).reduce(reduceLabels, blankLabelsTuple) ||
+    blankLabelsTuple;
 
   return {
     uuid: transaction?.uuid || "",
@@ -94,10 +103,13 @@ export function cleanTransactionFormValues(
   return {
     uuid: formData.uuid || uuidv4(),
     createdAt: transaction?.createdAt || now,
-    editedAt: transaction?.editedAt || now,
+    editedAt: now,
     processedAt: moment(formData.processedAt).unix() * 1000,
     rows: transaction?.rows || [],
     rates: transaction?.rates || [],
-    labels: transaction?.labels || [],
+    labels: formData.labelTitles.map((title, index) => ({
+      title,
+      text: formData.labelTexts[index],
+    })),
   };
 }

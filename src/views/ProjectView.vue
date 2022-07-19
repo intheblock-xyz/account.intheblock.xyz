@@ -21,8 +21,9 @@
     <hr />
     <TransactionForm
       v-if="isFormVisible"
+      :projectLabelTitles="projectLabelTitles"
       @submit="handleTransactionFormSubmit"
-      @cancel="hideTransactionForm"
+      @close="hideTransactionForm"
     />
     <ProjectActions
       v-else
@@ -39,20 +40,19 @@ import {
   getNewProject,
   IProject,
   IProjectData,
+  IProjectPreferences,
   saveProject,
   serializeProject,
 } from "@/core/project";
 import {
   cleanTransactionFormValues,
-  getTransactionForm,
   ITransaction,
   ITransactionFormSubmit,
 } from "@/core/transaction";
+import { areSetsEqual } from "@/lib/utils/areSetsEqual";
 import EditableText from "@/components/form/EditableText.vue";
+import PreferencesModal from "@/components/layout/PreferencesModal.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
-import PreferencesModal, {
-  IProjectPreferences,
-} from "@/components/layout/PreferencesModal.vue";
 import ProjectActions from "@/components/project/ProjectActions.vue";
 import TransactionForm from "@/components/transaction/TransactionForm.vue";
 
@@ -76,24 +76,39 @@ export default Vue.extend({
       isLoaded: false,
       isFormVisible: false,
       editingTransaction: null,
+      projectLabelTitles: new Set<string>(),
     };
     return data;
   },
 
   computed: {
-    essentials(): [string, ITransaction[]] {
-      return [this.title, this.transactions];
+    transactionsLabelTitles(): Set<string> {
+      return this.transactions.reduce((acc, transaction) => {
+        transaction.labels.forEach(({ title }) => acc.add(title));
+        return acc;
+      }, new Set<string>());
     },
 
-    toSave(): IProject {
-      return serializeProject(this);
+    essentials(): [string, ITransaction[]] {
+      return [this.title, this.transactions];
     },
   },
 
   methods: {
     load(project: IProject) {
+      const { uuid, title, createdAt, editedAt, transactions } = project;
+
       this.isLoaded = false;
-      Object.assign(this, project);
+      this.uuid = uuid;
+      this.title = title;
+      this.createdAt = createdAt;
+      this.editedAt = editedAt;
+      this.transactions = transactions;
+
+      this.projectLabelTitles = new Set<string>(
+        Array.from(this.transactionsLabelTitles),
+      );
+
       this.$nextTick(() => (this.isLoaded = true));
     },
 
@@ -101,19 +116,47 @@ export default Vue.extend({
       this.title = title;
     },
 
+    updateTransactionsLabels(labelTitles: Set<string>) {
+      this.projectLabelTitles = labelTitles;
+
+      if (!areSetsEqual(this.transactionsLabelTitles, labelTitles)) {
+        const titlesToRemove = new Set(
+          [...this.transactionsLabelTitles].filter(
+            (title) => !labelTitles.has(title),
+          ),
+        );
+
+        const titlesToAdd = new Set(
+          [...labelTitles].filter(
+            (title) => !this.transactionsLabelTitles.has(title),
+          ),
+        );
+
+        this.transactions.forEach((transaction) => {
+          transaction.labels = [
+            ...transaction.labels.filter(
+              ({ title }) => !titlesToRemove.has(title),
+            ),
+            ...Array.from(titlesToAdd).map((title) => ({ title, text: "" })),
+          ];
+        });
+      }
+    },
+
     touchEditedTimestamp() {
       this.editedAt = Date.now();
     },
 
     saveToLocalStorage() {
-      saveProject(this.toSave);
+      saveProject(serializeProject(this));
     },
 
-    // project toolbar
+    // load blank project
     newProject() {
       this.load(getNewProject());
     },
 
+    // preferences
     showPreferences() {
       this.$buefy.modal.open({
         parent: this,
@@ -121,6 +164,7 @@ export default Vue.extend({
         hasModalCard: true,
         props: {
           initialTitle: this.title,
+          initialLabelTitles: this.projectLabelTitles,
         },
         events: {
           submit: this.preferencesSubmit,
@@ -128,9 +172,10 @@ export default Vue.extend({
       });
     },
 
-    preferencesSubmit(formData: IProjectPreferences) {
-      const { title } = formData;
-      this.title = title;
+    preferencesSubmit(preferences: IProjectPreferences) {
+      const { title, labelTitles } = preferences;
+      this.updateTitle(title);
+      this.updateTransactionsLabels(labelTitles);
     },
 
     importFile() {
@@ -188,8 +233,6 @@ export default Vue.extend({
           cleanTransactionFormValues(formData, transaction),
         );
       }
-
-      this.hideTransactionForm();
     },
   },
 
