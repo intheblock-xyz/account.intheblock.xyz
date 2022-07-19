@@ -1,10 +1,11 @@
 <template>
-  <div class="box columns is-multiline">
+  <div class="columns is-multiline">
     <div class="column is-12">
       <h4 class="title is-4">
         {{ `${transaction ? "Edit" : "New"} Transaction` }}
       </h4>
     </div>
+
     <b-field label="Date" class="column is-3">
       <b-datepicker
         editable
@@ -28,37 +29,13 @@
     </b-field>
 
     <div class="column is-12"><h4 class="title is-4">Rows</h4></div>
+
     <div class="column is-12" v-for="row in rows" :key="row.uuid">
       <TransactionRowForm
         :transactionRow="getRowByUuid(row.uuid)"
         :projectLabelTitles="projectLabelTitles"
         ref="rowForms"
       />
-    </div>
-
-    <div class="buttons column is-12">
-      <b-button
-        v-if="transaction"
-        type="is-primary"
-        icon-left="check"
-        @click="submit()"
-        >Save</b-button
-      >
-      <b-button
-        v-if="!transaction"
-        type="is-primary"
-        icon-left="arrow-up"
-        @click="submit('pay')"
-        >Pay</b-button
-      >
-      <b-button
-        v-if="!transaction"
-        type="is-primary"
-        icon-left="arrow-down"
-        @click="submit('receive')"
-        >Receive</b-button
-      >
-      <b-button @click="$emit('close')">Cancel</b-button>
     </div>
   </div>
 </template>
@@ -68,6 +45,7 @@ import Vue from "vue";
 import {
   getLabelsForm,
   getTransactionForm,
+  ITransactionFormSubmit,
   ITransactionRow,
   TTransactionDirection,
 } from "@/core/transaction";
@@ -75,7 +53,7 @@ import TransactionRowForm, {
   TTransactionRowForm,
 } from "./TransactionRowForm.vue";
 
-export default Vue.extend({
+const TransactionForm = Vue.extend({
   name: "TransactionForm",
 
   props: {
@@ -102,18 +80,21 @@ export default Vue.extend({
   },
 
   methods: {
-    getRowByUuid(uuid: string) {
+    getRowByUuid(uuid: string): ITransactionRow {
       return this.transaction?.rows.find(
         (row: ITransactionRow) => row.uuid === uuid,
       );
     },
 
-    getSubmitData(transactionDirection?: TTransactionDirection) {
+    getFormSubmit(
+      transactionDirection?: TTransactionDirection,
+    ): ITransactionFormSubmit {
       return {
         formData: {
+          uuid: this.uuid,
           processedAt: this.processedAt,
           rows: (this.$refs.rowForms as TTransactionRowForm[]).map(
-            (rowForm) => rowForm.getSubmitData().formData,
+            (rowForm) => rowForm.getFormSubmit().formData,
           ),
           labelTitles: this.labelTitles,
           labelTexts: this.labelTexts,
@@ -121,11 +102,6 @@ export default Vue.extend({
         transaction: this.transaction,
         transactionDirection,
       };
-    },
-
-    submit(transactionDirection?: TTransactionDirection) {
-      this.$emit("submit", this.getSubmitData(transactionDirection));
-      this.$emit("close");
     },
   },
 
@@ -140,4 +116,8 @@ export default Vue.extend({
     },
   },
 });
+
+export default TransactionForm;
+
+export type TTransactionForm = InstanceType<typeof TransactionForm>;
 </script>

@@ -14,7 +14,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { getLabelsForm, getTransactionRowForm } from "@/core/transaction";
+import {
+  getLabelsForm,
+  getTransactionRowForm,
+  ITransactionRowFormSubmit,
+} from "@/core/transaction";
 
 const TransactionRowForm = Vue.extend({
   name: "TransactionRowForm",
@@ -39,10 +43,16 @@ const TransactionRowForm = Vue.extend({
   },
 
   methods: {
-    getSubmitData() {
+    getFormSubmit(): ITransactionRowFormSubmit {
       return {
         formData: {
+          uuid: this.uuid,
           processedAt: this.processedAt,
+          amount: this.amount,
+          amountVs: this.amountVs,
+          currencyTicker: this.currencyTicker,
+          currencyTickerVs: this.currencyTickerVs,
+          rate: this.rate,
           labelTitles: this.labelTitles,
           labelTexts: this.labelTexts,
         },

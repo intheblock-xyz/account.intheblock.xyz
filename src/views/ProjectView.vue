@@ -1,6 +1,7 @@
 <template>
   <div id="project-root" class="section container">
     <h1 class="title is-1">AIM Dispersal Tool</h1>
+
     <ProjectToolbar
       @newProject="newProject"
       @showPreferences="showPreferences"
@@ -8,6 +9,7 @@
       @exportJson="exportJson"
       @exportCsv="exportCsv"
     />
+
     <EditableText
       :title="title"
       @submit="updateTitle"
@@ -18,13 +20,42 @@
       classes="title is-2"
       submitOnBlur
     />
+
     <hr />
-    <TransactionForm
-      v-if="isFormVisible"
-      :projectLabelTitles="projectLabelTitles"
-      @submit="handleTransactionFormSubmit"
-      @close="hideTransactionForm"
-    />
+
+    <div v-if="isFormVisible">
+      <div class="box">
+        <TransactionForm
+          ref="transactionForm"
+          :projectLabelTitles="projectLabelTitles"
+        />
+        <div class="buttons">
+          <b-button
+            v-if="editingTransaction"
+            type="is-primary"
+            icon-left="check"
+            @click="transactionFormSubmit()"
+            >Save</b-button
+          >
+          <b-button
+            v-if="!editingTransaction"
+            type="is-primary"
+            icon-left="arrow-up"
+            @click="transactionFormSubmit('pay')"
+            >Pay</b-button
+          >
+          <b-button
+            v-if="!editingTransaction"
+            type="is-primary"
+            icon-left="arrow-down"
+            @click="transactionFormSubmit('receive')"
+            >Receive</b-button
+          >
+          <b-button @click="hideTransactionForm">Cancel</b-button>
+        </div>
+      </div>
+    </div>
+
     <ProjectActions
       v-else
       @addTransaction="addTransaction"
@@ -47,14 +78,16 @@ import {
 import {
   cleanTransactionFormValues,
   ITransaction,
-  ITransactionFormSubmit,
+  TTransactionDirection,
 } from "@/core/transaction";
 import { areSetsEqual } from "@/lib/utils/areSetsEqual";
 import EditableText from "@/components/form/EditableText.vue";
 import PreferencesModal from "@/components/layout/PreferencesModal.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
 import ProjectActions from "@/components/project/ProjectActions.vue";
-import TransactionForm from "@/components/transaction/TransactionForm.vue";
+import TransactionForm, {
+  TTransactionForm,
+} from "@/components/transaction/TransactionForm.vue";
 
 export default Vue.extend({
   name: "ProjectView",
@@ -223,9 +256,10 @@ export default Vue.extend({
       this.isFormVisible = false;
     },
 
-    handleTransactionFormSubmit(transactionFormSubmit: ITransactionFormSubmit) {
-      const { formData, transaction, transactionDirection } =
-        transactionFormSubmit;
+    transactionFormSubmit(transactionDirection?: TTransactionDirection) {
+      const { formData, transaction } = (
+        this.$refs.transactionForm as TTransactionForm
+      ).getFormSubmit(transactionDirection);
 
       if (!transaction && !transactionDirection) {
         throw new Error("Missed new transaction direction");
@@ -245,6 +279,8 @@ export default Vue.extend({
           cleanTransactionFormValues(formData, transaction),
         );
       }
+
+      this.hideTransactionForm();
     },
   },
 
