@@ -28,6 +28,7 @@
         <TransactionForm
           ref="transactionForm"
           :projectLabelTitles="projectLabelTitles"
+          @submit="editingTransaction && transactionFormSubmit()"
         />
         <div class="buttons">
           <b-button

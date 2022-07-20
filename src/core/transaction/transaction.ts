@@ -1,6 +1,5 @@
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
-import { TTransactionDirection } from ".";
 import { ICurrencyRate } from "./currency";
 import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 import {
@@ -9,6 +8,8 @@ import {
   getTransactionRowForm,
   cleanTransactionRowFormValues,
 } from "./row";
+
+export type TTransactionDirection = "pay" | "receive";
 
 export interface ITransaction extends ILabels {
   uuid: string;

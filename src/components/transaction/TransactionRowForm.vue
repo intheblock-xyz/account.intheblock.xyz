@@ -9,6 +9,18 @@
         v-model="processedAt"
       ></b-datepicker>
     </b-field>
+
+    <b-field
+      class="column is-3"
+      v-for="(title, index) in labelTitles"
+      :key="title"
+      :label="title"
+    >
+      <b-input
+        v-model="labelTexts[index]"
+        @keypress.native.enter="$emit('submit')"
+      ></b-input>
+    </b-field>
   </div>
 </template>
 

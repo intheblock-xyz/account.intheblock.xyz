@@ -35,6 +35,7 @@
         :transactionRow="getRowByUuid(row.uuid)"
         :projectLabelTitles="projectLabelTitles"
         ref="rowForms"
+        @submit="$emit('submit')"
       />
     </div>
   </div>
