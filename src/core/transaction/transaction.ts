@@ -41,7 +41,7 @@ export function getTransactionForm(
     transaction,
   );
   return {
-    uuid: transaction?.uuid || "",
+    uuid: transaction?.uuid || uuidv4(),
     processedAt: new Date(transaction?.processedAt || Date.now()),
     rows: transaction?.rows.map((row) =>
       getTransactionRowForm(projectLabelTitles, row),
@@ -57,7 +57,7 @@ export function cleanTransactionFormValues(
 ): ITransaction {
   const now = Date.now();
   return {
-    uuid: transaction?.uuid || uuidv4(),
+    uuid: formData.uuid,
     createdAt: transaction?.createdAt || now,
     editedAt: now,
     processedAt: moment(formData.processedAt).unix() * 1000,

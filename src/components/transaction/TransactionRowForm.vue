@@ -10,6 +10,82 @@
       ></b-datepicker>
     </b-field>
 
+    <b-field label="Amount" class="column is-3">
+      <b-input
+        required
+        type="number"
+        step="0.01"
+        v-model="amount"
+        @keypress.native.enter="$emit('submit')"
+      ></b-input>
+
+      <p class="control">
+        <b-dropdown
+          aria-role="list"
+          v-model="currencyTicker"
+          position="is-bottom-left"
+        >
+          <template #trigger="{ active }">
+            <b-button
+              :label="currencyTicker.toUpperCase()"
+              :icon-right="active ? 'menu-up' : 'menu-down'"
+            />
+          </template>
+
+          <b-dropdown-item
+            aria-role="listitem"
+            v-for="ticker in ['ada', 'btc', 'eth']"
+            :value="ticker"
+            :key="ticker"
+            >{{ ticker.toUpperCase() }}</b-dropdown-item
+          >
+        </b-dropdown>
+      </p>
+    </b-field>
+
+    <b-field label="Exchange" class="column is-3">
+      <b-input
+        required
+        type="number"
+        step="0.01"
+        v-model="amountVs"
+        @keypress.native.enter="$emit('submit')"
+      ></b-input>
+
+      <p class="control">
+        <b-dropdown
+          aria-role="list"
+          v-model="currencyTickerVs"
+          position="is-bottom-left"
+        >
+          <template #trigger="{ active }">
+            <b-button
+              :label="currencyTickerVs.toUpperCase()"
+              :icon-right="active ? 'menu-up' : 'menu-down'"
+            />
+          </template>
+
+          <b-dropdown-item
+            aria-role="listitem"
+            v-for="ticker in ['usd', 'eur']"
+            :value="ticker"
+            :key="ticker"
+            >{{ ticker.toUpperCase() }}</b-dropdown-item
+          >
+        </b-dropdown>
+      </p>
+    </b-field>
+
+    <b-field label="Rate" class="column is-3">
+      <b-input
+        required
+        type="number"
+        step="0.000001"
+        v-model="rate"
+        @keypress.native.enter="$emit('submit')"
+      ></b-input>
+    </b-field>
+
     <b-field
       class="column is-3"
       v-for="(title, index) in labelTitles"

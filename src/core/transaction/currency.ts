@@ -3,6 +3,7 @@ export interface ICurrency {
   ticker: string;
   geckoId?: string;
   geckoVsId?: string;
+  precision?: number;
 }
 
 export interface ICurrencyRate {

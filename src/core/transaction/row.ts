@@ -37,7 +37,7 @@ export function getTransactionRowForm(
     transactionRow,
   );
   return {
-    uuid: transactionRow?.uuid || "",
+    uuid: transactionRow?.uuid || uuidv4(),
     processedAt: new Date(transactionRow?.processedAt || Date.now()),
     amount: "",
     amountVs: "",
@@ -55,7 +55,7 @@ export function cleanTransactionRowFormValues(
 ): ITransactionRow {
   const now = Date.now();
   return {
-    uuid: transactionRow?.uuid || uuidv4(),
+    uuid: formData.uuid,
     createdAt: transactionRow?.createdAt || now,
     editedAt: now,
     processedAt: moment(formData.processedAt).unix() * 1000,
