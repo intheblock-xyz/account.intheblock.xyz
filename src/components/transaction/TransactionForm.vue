@@ -135,9 +135,6 @@ const TransactionForm = Vue.extend({
         formData: {
           uuid: this.uuid,
           processedAt: this.processedAt,
-          rows: (this.$refs.rowForms as TTransactionRowForm[]).map(
-            (rowForm) => rowForm.getFormSubmit().formData,
-          ),
           rowUuids: (this.$refs.rowForms as TTransactionRowForm[]).map(
             (rowForm) => rowForm.uuid,
           ),

@@ -90,6 +90,7 @@ import ProjectActions from "@/components/project/ProjectActions.vue";
 import TransactionForm, {
   TTransactionForm,
 } from "@/components/transaction/TransactionForm.vue";
+import { TTransactionRowForm } from "@/components/transaction/TransactionRowForm.vue";
 
 export default Vue.extend({
   name: "ProjectView",
@@ -266,27 +267,44 @@ export default Vue.extend({
     },
 
     transactionFormSubmit(transactionDirection?: TTransactionDirection) {
-      const { formData, transaction } = (
-        this.$refs.transactionForm as TTransactionForm
-      ).getFormSubmit(transactionDirection);
+      const transactionForm = this.$refs.transactionForm as TTransactionForm;
+
+      const { formData, transaction } =
+        transactionForm.getFormSubmit(transactionDirection);
 
       if (!transaction && !transactionDirection) {
         throw new Error("Missed new transaction direction");
       }
 
+      const rowsFormData = formData.rowUuids.map((rowUuid) => {
+        const rowForm = (
+          transactionForm.$refs.rowForms as TTransactionRowForm[]
+        ).find(({ uuid }) => rowUuid === uuid);
+        if (!rowForm) {
+          throw new Error(
+            `No transaction row form with such uuid '${rowUuid}'`,
+          );
+        } else {
+          const { formData: rowFormData } = rowForm?.getFormSubmit();
+          return rowFormData;
+        }
+      });
+
+      const updatedTransaction = cleanTransactionFormValues(
+        formData,
+        rowsFormData,
+        transaction,
+      );
+
       if (!transaction) {
-        this.transactions.push(cleanTransactionFormValues(formData));
+        this.transactions.push(updatedTransaction);
       } else {
         const transactionUuid = transaction.uuid;
         const transactionIndex = this.transactions.findIndex(
           ({ uuid }) => uuid === transactionUuid,
         );
 
-        this.transactions.splice(
-          transactionIndex,
-          1,
-          cleanTransactionFormValues(formData, transaction),
-        );
+        this.transactions.splice(transactionIndex, 1, updatedTransaction);
       }
 
       this.hideTransactionForm();

@@ -60,7 +60,7 @@ export function cleanTransactionRowFormValues(
     createdAt: transactionRow?.createdAt || now,
     editedAt: now,
     processedAt: moment(formData.processedAt).unix() * 1000,
-    amount: 0,
+    amount: parseFloat(formData.amount),
     currency: { ticker: formData.currencyTicker },
     currencyVs: { ticker: formData.currencyTickerVs },
     labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),

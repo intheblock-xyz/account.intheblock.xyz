@@ -23,7 +23,6 @@ export interface ITransaction extends ILabels {
 export interface ITransactionForm extends ILabelsForm {
   readonly uuid: string;
   processedAt: Date;
-  rows: ITransactionRowForm[];
   rowUuids: string[];
 }
 
@@ -44,10 +43,6 @@ export function getTransactionForm(
   return {
     uuid: transaction?.uuid || uuidv4(),
     processedAt: new Date(transaction?.processedAt || Date.now()),
-    rows:
-      transaction?.rows.map((row) =>
-        getTransactionRowForm(projectLabelTitles, row.uuid, row),
-      ) || [],
     rowUuids: transaction?.rows.map(({ uuid }) => uuid) || [],
     labelTitles,
     labelTexts,
@@ -56,20 +51,26 @@ export function getTransactionForm(
 
 export function cleanTransactionFormValues(
   formData: ITransactionForm,
+  rowsFormData?: ITransactionRowForm[],
   transaction?: ITransaction,
 ): ITransaction {
   const now = Date.now();
+  const rows = rowsFormData
+    ? rowsFormData.map((rowFormData) =>
+        cleanTransactionRowFormValues(
+          rowFormData,
+          transaction?.rows.find(({ uuid }) => uuid === rowFormData.uuid),
+        ),
+      )
+    : transaction
+    ? transaction.rows
+    : [];
   return {
     uuid: formData.uuid,
     createdAt: transaction?.createdAt || now,
     editedAt: now,
     processedAt: moment(formData.processedAt).unix() * 1000,
-    rows: formData.rows.map((rowFormData) =>
-      cleanTransactionRowFormValues(
-        rowFormData,
-        transaction?.rows.find(({ uuid }) => uuid === rowFormData.uuid),
-      ),
-    ),
+    rows,
     rates: transaction?.rates || [],
     labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),
   };
