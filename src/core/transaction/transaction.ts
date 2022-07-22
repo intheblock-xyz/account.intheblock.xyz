@@ -24,6 +24,7 @@ export interface ITransactionForm extends ILabelsForm {
   readonly uuid: string;
   processedAt: Date;
   rows: ITransactionRowForm[];
+  rowUuids: string[];
 }
 
 export interface ITransactionFormSubmit {
@@ -43,9 +44,11 @@ export function getTransactionForm(
   return {
     uuid: transaction?.uuid || uuidv4(),
     processedAt: new Date(transaction?.processedAt || Date.now()),
-    rows: transaction?.rows.map((row) =>
-      getTransactionRowForm(projectLabelTitles, row),
-    ) || [getTransactionRowForm(projectLabelTitles)],
+    rows:
+      transaction?.rows.map((row) =>
+        getTransactionRowForm(projectLabelTitles, row.uuid, row),
+      ) || [],
+    rowUuids: transaction?.rows.map(({ uuid }) => uuid) || [],
     labelTitles,
     labelTexts,
   };

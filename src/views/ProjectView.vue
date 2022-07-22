@@ -28,6 +28,7 @@
         <TransactionForm
           ref="transactionForm"
           :projectLabelTitles="projectLabelTitles"
+          :maxTransactionRowsNum="maxTransactionRowsNum"
           @submit="editingTransaction && transactionFormSubmit()"
         />
         <div class="buttons">
@@ -107,10 +108,12 @@ export default Vue.extend({
       createdAt: 0,
       editedAt: 0,
       transactions: [],
+      projectLabelTitles: new Set<string>(),
+
       isLoaded: false,
       isFormVisible: false,
       editingTransaction: null,
-      projectLabelTitles: new Set<string>(),
+      maxTransactionRowsNum: 5,
     };
     return data;
   },

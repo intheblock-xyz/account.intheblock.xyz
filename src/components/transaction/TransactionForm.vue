@@ -28,20 +28,29 @@
       ></b-input>
     </b-field>
 
-    <div class="column is-12"><h4 class="title is-4">Rows</h4></div>
-
-    <div class="column is-12" v-for="row in rows" :key="row.uuid">
+    <div
+      class="column is-12"
+      v-for="(rowUuid, index) in rowUuids"
+      :key="rowUuid"
+    >
+      <h5 class="title is-5 transactionRowTitle">Row {{ index + 1 }}</h5>
       <TransactionRowForm
-        :transactionRow="getRowByUuid(row.uuid)"
         :projectLabelTitles="projectLabelTitles"
+        :transactionRowUuid="rowUuid"
+        :transactionRow="getTransactionRowByUuid(rowUuid)"
+        :isAddRowButtonEnabled="rowUuids.length < maxTransactionRowsNum"
+        :isRemoveRowButtonEnabled="rowUuids.length > 1"
         ref="rowForms"
         @submit="$emit('submit')"
+        @addRowForm="addRowForm"
+        @removeRowForm="removeRowForm"
       />
     </div>
   </div>
 </template>
 
 <script lang="ts">
+import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 import {
   getLabelsForm,
@@ -58,14 +67,20 @@ const TransactionForm = Vue.extend({
   name: "TransactionForm",
 
   props: {
+    projectLabelTitles: {
+      type: Set,
+      required: true,
+    },
+
     transaction: {
       type: Object,
       required: false,
     },
 
-    projectLabelTitles: {
-      type: Set,
-      required: true,
+    maxTransactionRowsNum: {
+      type: Number,
+      required: false,
+      default: 10,
     },
   },
 
@@ -81,7 +96,33 @@ const TransactionForm = Vue.extend({
   },
 
   methods: {
-    getRowByUuid(uuid: string): ITransactionRow {
+    addRowForm(afterUuid?: string) {
+      let afterIndex = this.rowUuids.length;
+
+      if (afterUuid) {
+        afterIndex = this.rowUuids.findIndex((uuid) => uuid === afterUuid);
+
+        if (afterIndex === -1) {
+          throw new Error(`No transaction row with such uuid '${afterUuid}'`);
+        } else {
+          afterIndex += 1;
+        }
+      }
+
+      this.rowUuids.splice(afterIndex, 0, uuidv4());
+    },
+
+    removeRowForm(rowUuid: string) {
+      const rowIndex = this.rowUuids.findIndex((uuid) => uuid === rowUuid);
+
+      if (rowIndex === -1) {
+        throw new Error(`No transaction row with such uuid '${rowUuid}'`);
+      }
+
+      this.rowUuids.splice(rowIndex, 1);
+    },
+
+    getTransactionRowByUuid(uuid: string): ITransactionRow {
       return this.transaction?.rows.find(
         (row: ITransactionRow) => row.uuid === uuid,
       );
@@ -96,6 +137,9 @@ const TransactionForm = Vue.extend({
           processedAt: this.processedAt,
           rows: (this.$refs.rowForms as TTransactionRowForm[]).map(
             (rowForm) => rowForm.getFormSubmit().formData,
+          ),
+          rowUuids: (this.$refs.rowForms as TTransactionRowForm[]).map(
+            (rowForm) => rowForm.uuid,
           ),
           labelTitles: this.labelTitles,
           labelTexts: this.labelTexts,
@@ -116,9 +160,21 @@ const TransactionForm = Vue.extend({
       this.labelTexts = labelTexts;
     },
   },
+
+  mounted() {
+    this.addRowForm();
+  },
 });
 
 export default TransactionForm;
 
 export type TTransactionForm = InstanceType<typeof TransactionForm>;
 </script>
+
+<style scoped>
+.transactionRowTitle.title {
+  border-top: 1px solid hsl(0deg 0% 86%);
+  padding-top: 1em;
+  margin-bottom: 1em;
+}
+</style>

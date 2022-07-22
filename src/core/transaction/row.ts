@@ -30,6 +30,7 @@ export interface ITransactionRowFormSubmit {
 
 export function getTransactionRowForm(
   projectLabelTitles: Set<string>,
+  transactionRowUuid?: string,
   transactionRow?: ITransactionRow,
 ): ITransactionRowForm {
   const [labelTitles, labelTexts] = getLabelsForm(
@@ -37,7 +38,7 @@ export function getTransactionRowForm(
     transactionRow,
   );
   return {
-    uuid: transactionRow?.uuid || uuidv4(),
+    uuid: transactionRowUuid || transactionRow?.uuid || uuidv4(),
     processedAt: new Date(transactionRow?.processedAt || Date.now()),
     amount: "",
     amountVs: "",

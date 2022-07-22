@@ -7,6 +7,7 @@
         icon="calendar-today"
         placeholder="Type or select a date..."
         v-model="processedAt"
+        size="is-small"
       ></b-datepicker>
     </b-field>
 
@@ -16,6 +17,7 @@
         type="number"
         step="0.01"
         v-model="amount"
+        size="is-small"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -27,6 +29,7 @@
         >
           <template #trigger="{ active }">
             <b-button
+              size="is-small"
               :label="currencyTicker.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
             />
@@ -49,6 +52,7 @@
         type="number"
         step="0.01"
         v-model="amountVs"
+        size="is-small"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -62,6 +66,7 @@
             <b-button
               :label="currencyTickerVs.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
+              size="is-small"
             />
           </template>
 
@@ -82,6 +87,7 @@
         type="number"
         step="0.000001"
         v-model="rate"
+        size="is-small"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -94,8 +100,32 @@
     >
       <b-input
         v-model="labelTexts[index]"
+        size="is-small"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
+    </b-field>
+
+    <b-field label="Control" class="column is-3">
+      <p class="control" :style="{ width: '50%' }">
+        <b-button
+          expanded
+          size="is-small"
+          type="is-success is-light"
+          icon-left="plus"
+          :disabled="!isAddRowButtonEnabled"
+          @click="$emit('addRowForm', uuid)"
+        />
+      </p>
+      <p class="control" :style="{ width: '50%' }">
+        <b-button
+          expanded
+          size="is-small"
+          type="is-danger is-light"
+          icon-left="minus"
+          :disabled="!isRemoveRowButtonEnabled"
+          @click="$emit('removeRowForm', uuid)"
+        />
+      </p>
     </b-field>
   </div>
 </template>
@@ -112,20 +142,38 @@ const TransactionRowForm = Vue.extend({
   name: "TransactionRowForm",
 
   props: {
+    projectLabelTitles: {
+      type: Set,
+      required: true,
+    },
+
+    transactionRowUuid: {
+      type: String,
+      required: false,
+    },
+
     transactionRow: {
       type: Object,
       required: false,
     },
 
-    projectLabelTitles: {
-      type: Set,
-      required: true,
+    isAddRowButtonEnabled: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+
+    isRemoveRowButtonEnabled: {
+      type: Boolean,
+      required: false,
+      default: true,
     },
   },
 
   data() {
     return getTransactionRowForm(
       this.projectLabelTitles as Set<string>,
+      this.transactionRowUuid,
       this.transactionRow,
     );
   },

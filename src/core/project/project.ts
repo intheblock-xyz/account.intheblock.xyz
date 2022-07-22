@@ -19,6 +19,7 @@ export interface IProjectData extends IProject {
   isLoaded: boolean;
   isFormVisible: boolean;
   editingTransaction: ITransaction | null;
+  maxTransactionRowsNum: number;
 }
 
 export function getNewProject(): IProjectSerialized {
