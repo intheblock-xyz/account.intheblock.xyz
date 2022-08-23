@@ -4,36 +4,50 @@
       <p class="modal-card-title">Project preferences</p>
       <button type="button" class="delete" @click="$emit('close')" />
     </header>
-    <section class="modal-card-body columns is-multiline">
-      <b-field label="Project Title" class="column is-12">
-        <b-input
-          placeholder="[untitled project]"
-          ref="projectTitleInput"
-          v-model="title"
-          @keypress.native.enter="submit"
-        >
-        </b-input>
-      </b-field>
+    <section class="modal-card-body">
+      <b-tabs v-model="activeTab">
+        <b-tab-item label="General">
+          <div class="columns is-multiline">
+            <b-field label="Project Title" class="column is-12">
+              <b-input
+                placeholder="[untitled project]"
+                ref="projectTitleInput"
+                v-model="title"
+                @keypress.native.enter="submit"
+              >
+              </b-input>
+            </b-field>
 
-      <h5 class="title is-5 column">Labels set</h5>
-      <div class="column is-12 labelInputsContainer">
-        <b-field v-for="labelTitle in labelTitles" :key="labelTitle.uuid">
-          <b-input
-            ref="labelInputs"
-            v-model="labelTitle.value"
-            @keypress.native.enter="submit"
-          >
-          </b-input>
-          <p class="control">
-            <b-button
-              type="is-danger is-light"
-              icon-left="delete-outline"
-              @click="removeLabel(labelTitle.uuid)"
-            />
-          </p>
-        </b-field>
-        <b-button icon-left="plus" label="Add label" @click="addLabel" />
-      </div>
+            <!-- <h5 class="title is-5 column">Labels set</h5>
+            <div class="column is-12 labelInputsContainer">
+              <b-field v-for="labelTitle in labelTitles" :key="labelTitle.uuid">
+                <b-input
+                  ref="labelInputs"
+                  v-model="labelTitle.value"
+                  @keypress.native.enter="submit"
+                >
+                </b-input>
+                <p class="control">
+                  <b-button
+                    type="is-danger is-light"
+                    icon-left="delete-outline"
+                    @click="removeLabel(labelTitle.uuid)"
+                  />
+                </p>
+              </b-field>
+              <b-button icon-left="plus" label="Add label" @click="addLabel" />
+            </div> -->
+          </div>
+        </b-tab-item>
+        <b-tab-item label="Currencies">
+          <div class="columns is-multiline">
+            <h5 class="title is-5 column">Tokens</h5>
+            <div class="column is-12">Tokens</div>
+            <h5 class="title is-5 column">Exchange</h5>
+            <div class="column is-12">Exchange</div>
+          </div>
+        </b-tab-item>
+      </b-tabs>
     </section>
     <footer class="modal-card-foot">
       <b-button
@@ -51,6 +65,7 @@
 import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 import { IProjectPreferences } from "@/core/project";
+import PreferencesGeneralForm from "@/components/transaction/PreferencesGeneralForm.vue";
 
 interface ILabelTitleInput {
   uuid: string;
@@ -74,6 +89,7 @@ export default Vue.extend({
 
   data() {
     return {
+      activeTab: 0,
       title: this.initialTitle,
       labelTitles: Array.from(this.initialLabelTitles).map((value) => ({
         uuid: uuidv4(),
@@ -119,6 +135,10 @@ export default Vue.extend({
       (this.$refs.projectTitleInput as HTMLInputElement).focus();
     }
   },
+
+  components: {
+    PreferencesGeneralForm,
+  },
 });
 </script>
 
@@ -132,5 +152,14 @@ export default Vue.extend({
 .labelInputsContainer .field,
 .labelInputsContainer .button {
   margin-bottom: 0.25rem !important;
+}
+
+.b-tabs {
+  margin-top: -1rem;
+}
+
+.tab-item {
+  margin: -1rem;
+  padding-top: 1rem;
 }
 </style>

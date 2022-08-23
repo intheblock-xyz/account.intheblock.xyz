@@ -24,7 +24,7 @@
     >
       <b-input
         v-model="labelTexts[index]"
-        @keypress.native.enter="submit"
+        @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
 
