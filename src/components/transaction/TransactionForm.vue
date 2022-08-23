@@ -16,18 +16,6 @@
       ></b-datepicker>
     </b-field>
 
-    <b-field
-      class="column is-3"
-      v-for="(title, index) in labelTitles"
-      :key="title"
-      :label="title"
-    >
-      <b-input
-        v-model="labelTexts[index]"
-        @keypress.native.enter="$emit('submit')"
-      ></b-input>
-    </b-field>
-
     <div
       class="column is-12"
       v-for="(rowUuid, index) in rowUuids"
@@ -138,8 +126,6 @@ const TransactionForm = Vue.extend({
           rowUuids: (this.$refs.rowForms as TTransactionRowForm[]).map(
             (rowForm) => rowForm.uuid,
           ),
-          labelTitles: this.labelTitles,
-          labelTexts: this.labelTexts,
         },
         transaction: this.transaction,
         transactionDirection,
@@ -147,16 +133,7 @@ const TransactionForm = Vue.extend({
     },
   },
 
-  watch: {
-    projectLabelTitles() {
-      const [labelTitles, labelTexts] = getLabelsForm(
-        this.projectLabelTitles as Set<string>,
-        this.transaction,
-      );
-      this.labelTitles = labelTitles;
-      this.labelTexts = labelTexts;
-    },
-  },
+  watch: {},
 
   mounted() {
     this.addRowForm();

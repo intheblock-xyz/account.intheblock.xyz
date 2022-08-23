@@ -1,7 +1,6 @@
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
 import { ICurrencyRate } from "./currency";
-import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 import {
   ITransactionRow,
   ITransactionRowForm,
@@ -11,7 +10,7 @@ import {
 
 export type TTransactionDirection = "pay" | "receive";
 
-export interface ITransaction extends ILabels {
+export interface ITransaction {
   uuid: string;
   createdAt: number;
   editedAt: number;
@@ -20,7 +19,7 @@ export interface ITransaction extends ILabels {
   rates: ICurrencyRate[];
 }
 
-export interface ITransactionForm extends ILabelsForm {
+export interface ITransactionForm {
   readonly uuid: string;
   processedAt: Date;
   rowUuids: string[];
@@ -36,16 +35,10 @@ export function getTransactionForm(
   projectLabelTitles: Set<string>,
   transaction?: ITransaction,
 ): ITransactionForm {
-  const [labelTitles, labelTexts] = getLabelsForm(
-    projectLabelTitles,
-    transaction,
-  );
   return {
     uuid: transaction?.uuid || uuidv4(),
     processedAt: new Date(transaction?.processedAt || Date.now()),
     rowUuids: transaction?.rows.map(({ uuid }) => uuid) || [],
-    labelTitles,
-    labelTexts,
   };
 }
 
@@ -72,6 +65,5 @@ export function cleanTransactionFormValues(
     processedAt: moment(formData.processedAt).unix() * 1000,
     rows,
     rates: transaction?.rates || [],
-    labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),
   };
 }

@@ -7,7 +7,6 @@ export interface ITransactionRow extends ILabels {
   uuid: string;
   createdAt: number;
   editedAt: number;
-  processedAt: number;
   amount: number;
   currency: ICurrency;
   currencyVs: ICurrency;
@@ -15,7 +14,6 @@ export interface ITransactionRow extends ILabels {
 
 export interface ITransactionRowForm extends ILabelsForm {
   readonly uuid: string;
-  processedAt: Date;
   amount: string;
   amountVs: string;
   currencyTicker: string;
@@ -39,7 +37,6 @@ export function getTransactionRowForm(
   );
   return {
     uuid: transactionRowUuid || transactionRow?.uuid || uuidv4(),
-    processedAt: new Date(transactionRow?.processedAt || Date.now()),
     amount: "",
     amountVs: "",
     currencyTicker: "",
@@ -59,7 +56,6 @@ export function cleanTransactionRowFormValues(
     uuid: formData.uuid,
     createdAt: transactionRow?.createdAt || now,
     editedAt: now,
-    processedAt: moment(formData.processedAt).unix() * 1000,
     amount: parseFloat(formData.amount),
     currency: { ticker: formData.currencyTicker },
     currencyVs: { ticker: formData.currencyTickerVs },

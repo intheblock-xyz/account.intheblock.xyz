@@ -1,16 +1,5 @@
 <template>
   <div class="columns is-multiline">
-    <b-field label="Date" class="column is-3">
-      <b-datepicker
-        editable
-        locale="en-CA"
-        icon="calendar-today"
-        placeholder="Type or select a date..."
-        v-model="processedAt"
-        size="is-small"
-      ></b-datepicker>
-    </b-field>
-
     <b-field label="Amount" class="column is-3">
       <b-input
         required
@@ -183,7 +172,6 @@ const TransactionRowForm = Vue.extend({
       return {
         formData: {
           uuid: this.uuid,
-          processedAt: this.processedAt,
           amount: this.amount,
           amountVs: this.amountVs,
           currencyTicker: this.currencyTicker,

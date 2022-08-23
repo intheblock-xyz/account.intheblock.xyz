@@ -131,7 +131,7 @@ export default Vue.extend({
 
     transactionsLabelTitles(): Set<string> {
       return this.transactions.reduce((titles, transaction) => {
-        transaction.labels.forEach(({ title }) => titles.add(title));
+        // transaction.labels.forEach(({ title }) => titles.add(title));
         transaction.rows.forEach(({ labels }) => {
           labels.forEach(({ title }) => titles.add(title));
         });
@@ -173,29 +173,6 @@ export default Vue.extend({
 
     updateTransactionsLabels(labelTitles: Set<string>) {
       this.projectLabelTitles = labelTitles;
-
-      if (!areSetsEqual(this.transactionsLabelTitles, labelTitles)) {
-        const titlesToRemove = new Set(
-          [...this.transactionsLabelTitles].filter(
-            (title) => !labelTitles.has(title),
-          ),
-        );
-
-        const titlesToAdd = new Set(
-          [...labelTitles].filter(
-            (title) => !this.transactionsLabelTitles.has(title),
-          ),
-        );
-
-        this.transactions.forEach((transaction) => {
-          transaction.labels = [
-            ...transaction.labels.filter(
-              ({ title }) => !titlesToRemove.has(title),
-            ),
-            ...Array.from(titlesToAdd).map((title) => ({ title, text: "" })),
-          ];
-        });
-      }
     },
 
     touchEditedTimestamp() {
@@ -264,6 +241,7 @@ export default Vue.extend({
 
     hideTransactionForm() {
       this.isFormVisible = false;
+      this.editingTransaction = null;
     },
 
     transactionFormSubmit(transactionDirection?: TTransactionDirection) {
