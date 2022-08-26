@@ -53,7 +53,7 @@ export default Vue.extend({
       type: String,
       required: false,
       default: "span",
-      validator(value) {
+      validator(value: string) {
         return [
           "h1",
           "h2",
@@ -77,7 +77,7 @@ export default Vue.extend({
     inputSize: {
       type: String,
       required: false,
-      validator(value) {
+      validator(value: string) {
         return ["is-small", "is-medium", "is-large"].includes(value);
       },
     },

@@ -34,9 +34,15 @@ export function getNewProject(): IProjectSerialized {
   };
 }
 
-export function serializeProject(projectData: IProject): IProjectSerialized {
+export function serializeProject(
+  projectData: IProjectData,
+): IProjectSerialized {
   return {
-    ...projectData,
+    uuid: projectData.uuid,
+    title: projectData.title,
+    createdAt: projectData.createdAt,
+    editedAt: projectData.editedAt,
+    transactions: projectData.transactions,
     projectLabelTitles: Array.from(projectData.projectLabelTitles),
   };
 }

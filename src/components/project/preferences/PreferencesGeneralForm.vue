@@ -15,26 +15,31 @@
 <script lang="ts">
 import Vue from "vue";
 
-export default Vue.extend({
+const PreferencesGeneralForm = Vue.extend({
   name: "PreferencesGeneralForm",
 
   props: {
-    focusOnMount: {
-      type: Boolean,
-      required: false,
-      default: false,
+    initialTitle: {
+      type: String,
+      required: true,
     },
 
     titlePlaceholder: {
       type: String,
       required: false,
-      default: '[untitled project]',
+      default: "[untitled project]",
+    },
+
+    focusOnMount: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 
   data() {
     return {
-      title: "",
+      title: this.initialTitle,
     };
   },
 
@@ -42,7 +47,7 @@ export default Vue.extend({
     getFormData() {
       return {
         title: this.title,
-      }
+      };
     },
   },
 
@@ -50,6 +55,12 @@ export default Vue.extend({
     if (this.focusOnMount && this.$refs.titleInput) {
       (this.$refs.titleInput as HTMLInputElement).focus();
     }
-  }
+  },
 });
+
+export default PreferencesGeneralForm;
+
+export type TPreferencesGeneralForm = InstanceType<
+  typeof PreferencesGeneralForm
+>;
 </script>
