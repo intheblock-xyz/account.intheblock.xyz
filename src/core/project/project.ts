@@ -34,15 +34,9 @@ export function getNewProject(): IProjectSerialized {
   };
 }
 
-export function serializeProject(
-  projectData: IProjectData,
-): IProjectSerialized {
+export function serializeProject(projectData: IProject): IProjectSerialized {
   return {
-    uuid: projectData.uuid,
-    title: projectData.title,
-    createdAt: projectData.createdAt,
-    editedAt: projectData.editedAt,
-    transactions: projectData.transactions,
+    ...projectData,
     projectLabelTitles: Array.from(projectData.projectLabelTitles),
   };
 }
