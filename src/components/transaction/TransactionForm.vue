@@ -21,7 +21,9 @@
       v-for="(rowUuid, index) in rowUuids"
       :key="rowUuid"
     >
-      <h5 class="title is-5 transactionRowTitle">Row {{ index + 1 }}</h5>
+      <h5 v-if="account.isSignedIn" class="title is-5 transactionRowTitle">
+        Row {{ index + 1 }}
+      </h5>
       <TransactionRowForm
         :projectLabelTitles="projectLabelTitles"
         :transactionRowUuid="rowUuid"

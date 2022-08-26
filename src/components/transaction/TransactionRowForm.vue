@@ -6,7 +6,7 @@
         type="number"
         step="0.01"
         v-model="amount"
-        size="is-small"
+        :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -18,7 +18,7 @@
         >
           <template #trigger="{ active }">
             <b-button
-              size="is-small"
+              :size="account.isSignedIn ? 'is-small' : undefined"
               :label="currencyTicker.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
             />
@@ -41,7 +41,7 @@
         type="number"
         step="0.01"
         v-model="amountVs"
-        size="is-small"
+        :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -55,7 +55,7 @@
             <b-button
               :label="currencyTickerVs.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
-              size="is-small"
+              :size="account.isSignedIn ? 'is-small' : undefined"
             />
           </template>
 
@@ -76,7 +76,7 @@
         type="number"
         step="0.000001"
         v-model="rate"
-        size="is-small"
+        :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -89,12 +89,12 @@
     >
       <b-input
         v-model="labelTexts[index]"
-        size="is-small"
+        :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
 
-    <b-field label="Control" class="column is-3">
+    <b-field v-if="account.isSignedIn" label="Control" class="column is-3">
       <p class="control" :style="{ width: '50%' }">
         <b-button
           expanded
@@ -166,6 +166,8 @@ const TransactionRowForm = Vue.extend({
       this.transactionRow,
     );
   },
+
+  inject: ["account"],
 
   methods: {
     getFormSubmit(): ITransactionRowFormSubmit {
