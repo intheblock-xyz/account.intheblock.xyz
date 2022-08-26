@@ -4,7 +4,6 @@ import { ICurrencyRate } from "./currency";
 import {
   ITransactionRow,
   ITransactionRowForm,
-  getTransactionRowForm,
   cleanTransactionRowFormValues,
 } from "./row";
 
@@ -32,7 +31,6 @@ export interface ITransactionFormSubmit {
 }
 
 export function getTransactionForm(
-  projectLabelTitles: Set<string>,
   transaction?: ITransaction,
 ): ITransactionForm {
   return {

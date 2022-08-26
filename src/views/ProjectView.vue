@@ -82,7 +82,6 @@ import {
   ITransaction,
   TTransactionDirection,
 } from "@/core/transaction";
-import { areSetsEqual } from "@/lib/utils/areSetsEqual";
 import EditableText from "@/components/form/EditableText.vue";
 import PreferencesModal from "@/components/layout/PreferencesModal.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
@@ -129,18 +128,8 @@ export default Vue.extend({
       }, new Set<string>());
     },
 
-    transactionsLabelTitles(): Set<string> {
-      return this.transactions.reduce((titles, transaction) => {
-        // transaction.labels.forEach(({ title }) => titles.add(title));
-        transaction.rows.forEach(({ labels }) => {
-          labels.forEach(({ title }) => titles.add(title));
-        });
-        return titles;
-      }, new Set<string>());
-    },
-
-    essentials(): [string, ITransaction[]] {
-      return [this.title, this.transactions];
+    essentials(): [string, ITransaction[], Set<string>] {
+      return [this.title, this.transactions, this.projectLabelTitles];
     },
   },
 

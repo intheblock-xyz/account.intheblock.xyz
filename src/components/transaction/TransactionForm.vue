@@ -41,7 +41,6 @@
 import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 import {
-  getLabelsForm,
   getTransactionForm,
   ITransactionFormSubmit,
   ITransactionRow,
@@ -77,36 +76,30 @@ const TransactionForm = Vue.extend({
   },
 
   data() {
-    return getTransactionForm(
-      this.projectLabelTitles as Set<string>,
-      this.transaction,
-    );
+    return getTransactionForm(this.transaction);
   },
+
+  inject: ["account"],
 
   methods: {
     addRowForm(afterUuid?: string) {
       let afterIndex = this.rowUuids.length;
-
       if (afterUuid) {
         afterIndex = this.rowUuids.findIndex((uuid) => uuid === afterUuid);
-
         if (afterIndex === -1) {
           throw new Error(`No transaction row with such uuid '${afterUuid}'`);
         } else {
           afterIndex += 1;
         }
       }
-
       this.rowUuids.splice(afterIndex, 0, uuidv4());
     },
 
     removeRowForm(rowUuid: string) {
       const rowIndex = this.rowUuids.findIndex((uuid) => uuid === rowUuid);
-
       if (rowIndex === -1) {
         throw new Error(`No transaction row with such uuid '${rowUuid}'`);
       }
-
       this.rowUuids.splice(rowIndex, 1);
     },
 

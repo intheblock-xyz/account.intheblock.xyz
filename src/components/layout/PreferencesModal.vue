@@ -18,7 +18,7 @@
               </b-input>
             </b-field>
 
-            <!-- <h5 class="title is-5 column">Labels set</h5>
+            <h5 class="title is-5 column">Labels set</h5>
             <div class="column is-12 labelInputsContainer">
               <b-field v-for="labelTitle in labelTitles" :key="labelTitle.uuid">
                 <b-input
@@ -36,7 +36,7 @@
                 </p>
               </b-field>
               <b-button icon-left="plus" label="Add label" @click="addLabel" />
-            </div> -->
+            </div>
           </div>
         </b-tab-item>
         <b-tab-item label="Currencies">
