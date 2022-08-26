@@ -83,7 +83,7 @@ import {
   TTransactionDirection,
 } from "@/core/transaction";
 import EditableText from "@/components/form/EditableText.vue";
-import PreferencesModal from "@/components/layout/PreferencesModal.vue";
+import PreferencesModal from "@/components/project/preferences/PreferencesModal.vue";
 import ProjectToolbar from "@/components/project/ProjectToolbar.vue";
 import ProjectActions from "@/components/project/ProjectActions.vue";
 import TransactionForm, {
@@ -234,15 +234,19 @@ export default Vue.extend({
     },
 
     transactionFormSubmit(transactionDirection?: TTransactionDirection) {
+      // get form ref
       const transactionForm = this.$refs.transactionForm as TTransactionForm;
 
+      // get transaction form data
       const { formData, transaction } =
         transactionForm.getFormSubmit(transactionDirection);
 
+      // throw an error if there is new transaction without direction specified
       if (!transaction && !transactionDirection) {
         throw new Error("Missed new transaction direction");
       }
 
+      // get transaction rows forms data
       const rowsFormData = formData.rowUuids.map((rowUuid) => {
         const rowForm = (
           transactionForm.$refs.rowForms as TTransactionRowForm[]
@@ -257,23 +261,27 @@ export default Vue.extend({
         }
       });
 
+      // cast form data to transaction data
       const updatedTransaction = cleanTransactionFormValues(
         formData,
         rowsFormData,
         transaction,
       );
 
-      if (!transaction) {
-        this.transactions.push(updatedTransaction);
-      } else {
-        const transactionUuid = transaction.uuid;
-        const transactionIndex = this.transactions.findIndex(
-          ({ uuid }) => uuid === transactionUuid,
-        );
+      // update transactions array
+      // if (!transaction) {
+      //   this.transactions.push(updatedTransaction);
+      // } else {
+      //   const transactionUuid = transaction.uuid;
+      //   const transactionIndex = this.transactions.findIndex(
+      //     ({ uuid }) => uuid === transactionUuid,
+      //   );
+      //   this.transactions.splice(transactionIndex, 1, updatedTransaction);
+      // }
 
-        this.transactions.splice(transactionIndex, 1, updatedTransaction);
-      }
+      console.log({ formData, rowsFormData, updatedTransaction });
 
+      // hide the form
       this.hideTransactionForm();
     },
   },

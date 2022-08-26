@@ -13,6 +13,7 @@
       <p class="control">
         <b-dropdown
           aria-role="list"
+          v-if="account.isSignedIn"
           v-model="currencyTicker"
           position="is-bottom-left"
         >
@@ -32,6 +33,9 @@
             >{{ ticker.toUpperCase() }}</b-dropdown-item
           >
         </b-dropdown>
+        <b-button v-else class="is-static">{{
+          currencyTicker.toUpperCase()
+        }}</b-button>
       </p>
     </b-field>
 
@@ -48,6 +52,7 @@
       <p class="control">
         <b-dropdown
           aria-role="list"
+          v-if="account.isSignedIn"
           v-model="currencyTickerVs"
           position="is-bottom-left"
         >
@@ -67,6 +72,9 @@
             >{{ ticker.toUpperCase() }}</b-dropdown-item
           >
         </b-dropdown>
+        <b-button v-else class="is-static">{{
+          currencyTickerVs.toUpperCase()
+        }}</b-button>
       </p>
     </b-field>
 
@@ -179,8 +187,8 @@ const TransactionRowForm = Vue.extend({
           currencyTicker: this.currencyTicker,
           currencyTickerVs: this.currencyTickerVs,
           rate: this.rate,
-          labelTitles: this.labelTitles,
-          labelTexts: this.labelTexts,
+          labelTitles: Array.from(this.labelTitles),
+          labelTexts: Array.from(this.labelTexts),
         },
         transactionRow: this.transactionRow,
       };
@@ -196,6 +204,15 @@ const TransactionRowForm = Vue.extend({
       this.labelTitles = labelTitles;
       this.labelTexts = labelTexts;
     },
+  },
+
+  mounted() {
+    if (!this.currencyTicker) {
+      this.currencyTicker = "ada";
+    }
+    if (!this.currencyTickerVs) {
+      this.currencyTickerVs = "usd";
+    }
   },
 });
 

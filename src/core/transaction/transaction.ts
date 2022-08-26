@@ -1,6 +1,6 @@
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
-import { ICurrencyRate } from "./currency";
+import { ICurrencyRate } from "../currency";
 import {
   ITransactionRow,
   ITransactionRowForm,
