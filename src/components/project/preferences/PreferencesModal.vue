@@ -21,12 +21,26 @@
           />
         </b-tab-item>
         <b-tab-item label="Currencies">
-          <div class="columns is-multiline">
-            <h5 class="title is-5 column">Tokens</h5>
-            <div class="column is-12">Tokens</div>
-            <h5 class="title is-5 column">Exchange</h5>
-            <div class="column is-12">Exchange</div>
-          </div>
+          <PreferencesCurrencyFormSet
+            v-if="account.isSignedIn"
+            ref="tokenFormSet"
+            :initialCurrencies="
+              new Set([{ ticker: 'ADA', name: 'Cardano Ada' }])
+            "
+            heading="Tokens"
+            unit="token"
+            @submit="submit"
+          />
+          <b-message v-else type="is-warning" has-icon>
+            Editing currency sets available only at paid account
+          </b-message>
+          <PreferencesCurrencyFormSet
+            v-if="account.isSignedIn"
+            ref="exchangeFormSet"
+            :initialCurrencies="new Set([{ ticker: 'USD', name: 'US Dollar' }])"
+            heading="Exchange"
+            @submit="submit"
+          />
         </b-tab-item>
       </b-tabs>
     </section>
@@ -51,6 +65,9 @@ import PreferencesGeneralForm, {
 import PreferencesLabelFormSet, {
   TPreferencesLabelFormSet,
 } from "@/components/project/preferences/PreferencesLabelFormSet.vue";
+import PreferencesCurrencyFormSet, {
+  TPreferencesCurrencyFormSet,
+} from "@/components/project/preferences/PreferencesCurrencyFormSet.vue";
 
 export default Vue.extend({
   name: "PreferencesModal",
@@ -72,6 +89,8 @@ export default Vue.extend({
       activeTab: 0,
     };
   },
+
+  inject: ["account"],
 
   methods: {
     submit() {
@@ -95,6 +114,7 @@ export default Vue.extend({
   components: {
     PreferencesGeneralForm,
     PreferencesLabelFormSet,
+    PreferencesCurrencyFormSet,
   },
 });
 </script>

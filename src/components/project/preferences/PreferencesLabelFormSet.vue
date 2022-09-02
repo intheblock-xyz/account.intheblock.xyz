@@ -6,7 +6,7 @@
         <b-input
           ref="labelInputs"
           v-model="labelTitle.value"
-          @keypress.native.enter="$emit('submit')"
+          @keypress.native.enter="addLabel"
         >
         </b-input>
         <p class="control">
@@ -59,11 +59,7 @@ const PreferencesLabelFormSet = Vue.extend({
   methods: {
     addLabel() {
       this.labelTitles.push({ uuid: uuidv4(), value: "" });
-      this.$nextTick(() =>
-        (this.$refs.labelInputs as HTMLInputElement[])[
-          this.labelTitles.length - 1
-        ].focus(),
-      );
+      this.$nextTick(this.focusFirst);
     },
 
     removeLabel(uuid: string) {
@@ -71,6 +67,15 @@ const PreferencesLabelFormSet = Vue.extend({
         (labelTitle) => uuid === labelTitle.uuid,
       );
       this.labelTitles.splice(index, 1);
+      this.$nextTick(this.focusFirst);
+    },
+
+    focusFirst() {
+      if (this.labelTitles.length > 0) {
+        (this.$refs.labelInputs as HTMLInputElement[])[
+          this.labelTitles.length - 1
+        ].focus();
+      }
     },
 
     getFormData() {
@@ -86,10 +91,7 @@ const PreferencesLabelFormSet = Vue.extend({
 
   mounted() {
     if (this.focusOnMount) {
-      const labelInputsRefs = this.$refs.labelInputs as HTMLInputElement[];
-      if (labelInputsRefs.length) {
-        labelInputsRefs[0].focus();
-      }
+      this.focusFirst();
     }
   },
 });
