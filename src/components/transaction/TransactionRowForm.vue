@@ -27,7 +27,7 @@
 
           <b-dropdown-item
             aria-role="listitem"
-            v-for="ticker in ['ada', 'btc', 'eth']"
+            v-for="ticker in tokenTickersList"
             :value="ticker"
             :key="ticker"
             >{{ ticker.toUpperCase() }}</b-dropdown-item
@@ -66,7 +66,7 @@
 
           <b-dropdown-item
             aria-role="listitem"
-            v-for="ticker in ['usd', 'eur']"
+            v-for="ticker in exchangeTickersList"
             :value="ticker"
             :key="ticker"
             >{{ ticker.toUpperCase() }}</b-dropdown-item
@@ -129,6 +129,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { ICurrency } from "@/core/app";
 import {
   getLabelsForm,
   getTransactionRowForm,
@@ -140,6 +141,16 @@ const TransactionRowForm = Vue.extend({
 
   props: {
     projectLabelTitles: {
+      type: Set,
+      required: true,
+    },
+
+    projectTokens: {
+      type: Set,
+      required: true,
+    },
+
+    projectExchanges: {
       type: Set,
       required: true,
     },
@@ -177,6 +188,20 @@ const TransactionRowForm = Vue.extend({
 
   inject: ["account"],
 
+  computed: {
+    tokenTickersList(): string[] {
+      return (Array.from(this.projectTokens) as ICurrency[]).map(
+        ({ ticker }) => ticker,
+      );
+    },
+
+    exchangeTickersList(): string[] {
+      return (Array.from(this.projectExchanges) as ICurrency[]).map(
+        ({ ticker }) => ticker,
+      );
+    },
+  },
+
   methods: {
     getFormSubmit(): ITransactionRowFormSubmit {
       return {
@@ -208,10 +233,10 @@ const TransactionRowForm = Vue.extend({
 
   mounted() {
     if (!this.currencyTicker) {
-      this.currencyTicker = "ada";
+      this.currencyTicker = this.tokenTickersList[0];
     }
     if (!this.currencyTickerVs) {
-      this.currencyTickerVs = "usd";
+      this.currencyTickerVs = this.exchangeTickersList[0];
     }
   },
 });

@@ -30,6 +30,18 @@ export function saveProject(project: IProjectSerialized): void {
   }
 }
 
+function listSavedProjects(): IProjectSerialized[] {
+  return getSavedProjectsUuids().reduce(
+    (acc: IProjectSerialized[], projectUuid: string): IProjectSerialized[] => {
+      try {
+        acc.push(getProjectByUuid(projectUuid));
+      } catch {}
+      return acc;
+    },
+    [],
+  );
+}
+
 export function getProjectByUuid(uuid: string): IProjectSerialized {
   const project = localStorageLoad<IProjectSerialized>(getProjectKey(uuid));
 
@@ -40,15 +52,16 @@ export function getProjectByUuid(uuid: string): IProjectSerialized {
   }
 }
 
-export function getLastEditedProject(): IProjectSerialized | null {
-  const savedProjectsUuids = getSavedProjectsUuids();
-  if (savedProjectsUuids.length === 0) {
+export function getLastEditedProject(
+  isSignedIn: boolean,
+): IProjectSerialized | null {
+  const savedProjects = listSavedProjects().filter(
+    (project) => project.isSignedIn === isSignedIn,
+  );
+
+  if (savedProjects.length === 0) {
     return null;
   }
-
-  const savedProjects = savedProjectsUuids.map((uuid) =>
-    getProjectByUuid(uuid),
-  );
 
   return chain(savedProjects).sortBy("editedAt").last().value();
 }

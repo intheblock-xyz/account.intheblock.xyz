@@ -58,7 +58,11 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { IProjectPreferences } from "@/core/project";
+import {
+  getDefaultProjectExchanges,
+  getDefaultProjectTokens,
+  IProjectPreferences,
+} from "@/core/project";
 import PreferencesGeneralForm, {
   TPreferencesGeneralForm,
 } from "@/components/project/preferences/PreferencesGeneralForm.vue";
@@ -68,6 +72,7 @@ import PreferencesLabelFormSet, {
 import PreferencesCurrencyFormSet, {
   TPreferencesCurrencyFormSet,
 } from "@/components/project/preferences/PreferencesCurrencyFormSet.vue";
+import { ICurrency } from "@/core/app";
 
 export default Vue.extend({
   name: "PreferencesModal",
@@ -117,8 +122,12 @@ export default Vue.extend({
       const projectPreferences: IProjectPreferences = {
         ...generalFormRef.getFormData(),
         labelTitles: labelFormSetRef.getFormData().labelTitles,
-        tokens: tokenFormSetRef.getFormData().currencies,
-        exchanges: exchangeFormSetRef.getFormData().currencies,
+        tokens:
+          tokenFormSetRef?.getFormData().currencies ||
+          new Set<ICurrency>(getDefaultProjectTokens()),
+        exchanges:
+          exchangeFormSetRef?.getFormData().currencies ||
+          new Set<ICurrency>(getDefaultProjectExchanges()),
       };
 
       // call upper handlers

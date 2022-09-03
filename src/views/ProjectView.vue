@@ -28,6 +28,8 @@
         <TransactionForm
           ref="transactionForm"
           :projectLabelTitles="projectLabelTitles"
+          :projectTokens="projectTokens"
+          :projectExchanges="projectExchanges"
           :maxTransactionRowsNum="maxTransactionRowsNum"
           @submit="editingTransaction && transactionFormSubmit()"
         />
@@ -67,6 +69,7 @@
 </template>
 
 <script lang="ts">
+import get from "lodash/get";
 import Vue from "vue";
 import { ICurrency } from "@/core/app";
 import {
@@ -108,6 +111,7 @@ export default Vue.extend({
       title: "",
       createdAt: 0,
       editedAt: 0,
+      isSignedIn: get(this, "account.isSignedIn") || false,
       transactions: [],
       projectLabelTitles: new Set<string>(),
       projectTokens: new Set<ICurrency>(),
@@ -120,6 +124,8 @@ export default Vue.extend({
     };
     return data;
   },
+
+  inject: ["account"],
 
   computed: {
     transactionsCurrencyTickers(): Set<string> {
@@ -155,6 +161,7 @@ export default Vue.extend({
         title,
         createdAt,
         editedAt,
+        isSignedIn,
         transactions,
         projectLabelTitles,
         projectTokens,
@@ -166,6 +173,7 @@ export default Vue.extend({
       this.title = title;
       this.createdAt = createdAt;
       this.editedAt = editedAt;
+      this.isSignedIn = isSignedIn;
       this.transactions = transactions;
 
       this.projectLabelTitles = new Set<string>(projectLabelTitles);
@@ -200,8 +208,19 @@ export default Vue.extend({
     },
 
     // load blank project
-    newProject() {
-      this.load(getNewProject());
+    newProject(isSignedIn: boolean) {
+      this.load(getNewProject(isSignedIn));
+    },
+
+    // load last project from local storage
+    loadLastStoredProject() {
+      const isSignedIn: boolean = get(this, "account.isSignedIn") || false;
+      const storedProject = getLastEditedProject(isSignedIn);
+      if (storedProject === null) {
+        this.newProject(isSignedIn);
+      } else {
+        this.load(storedProject);
+      }
     },
 
     // preferences
@@ -324,15 +343,14 @@ export default Vue.extend({
         this.saveToLocalStorage();
       }
     },
+
+    ["account.isSignedIn"]() {
+      this.loadLastStoredProject();
+    },
   },
 
   created() {
-    const storedProject = getLastEditedProject();
-    if (storedProject === null) {
-      this.newProject();
-    } else {
-      this.load(storedProject);
-    }
+    this.loadLastStoredProject();
   },
 });
 </script>

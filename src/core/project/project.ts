@@ -1,12 +1,19 @@
 import { v4 as uuidv4 } from "uuid";
 import { ICurrency } from "../app";
 import { ITransaction } from "../transaction";
+import {
+  getDefaultProjectExchanges,
+  getDefaultProjectLabelTitles,
+  getDefaultProjectTitle,
+  getDefaultProjectTokens,
+} from "./preferences";
 
 export interface IProject {
   uuid: string;
   title: string;
   createdAt: number;
   editedAt: number;
+  isSignedIn: boolean;
   transactions: ITransaction[];
   projectLabelTitles: Set<string>;
   projectTokens: Set<ICurrency>;
@@ -30,21 +37,18 @@ export interface IProjectData extends IProject {
   maxTransactionRowsNum: number;
 }
 
-export function getNewProject(): IProjectSerialized {
+export function getNewProject(isSignedIn: boolean): IProjectSerialized {
   const now = Date.now();
   return {
     uuid: uuidv4(),
-    title: "New Project",
+    title: getDefaultProjectTitle(),
     createdAt: now,
     editedAt: now,
+    isSignedIn,
     transactions: [],
-    projectLabelTitles: ["Label"],
-    projectTokens: [
-      { ticker: "ADA", name: "Cardano Ada", geckoId: "cardano", precision: 6 },
-    ],
-    projectExchanges: [
-      { ticker: "USD", name: "US Dollar", geckoVsId: "usd", precision: 2 },
-    ],
+    projectLabelTitles: getDefaultProjectLabelTitles(),
+    projectTokens: getDefaultProjectTokens(),
+    projectExchanges: getDefaultProjectExchanges(),
   };
 }
 
@@ -56,6 +60,7 @@ export function serializeProject(
     title: projectData.title,
     createdAt: projectData.createdAt,
     editedAt: projectData.editedAt,
+    isSignedIn: projectData.isSignedIn,
     transactions: projectData.transactions,
     projectLabelTitles: Array.from(projectData.projectLabelTitles),
     projectTokens: Array.from(projectData.projectTokens),

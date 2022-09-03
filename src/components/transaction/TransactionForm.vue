@@ -26,6 +26,8 @@
       </h5>
       <TransactionRowForm
         :projectLabelTitles="projectLabelTitles"
+        :projectTokens="projectTokens"
+        :projectExchanges="projectExchanges"
         :transactionRowUuid="rowUuid"
         :transactionRow="getTransactionRowByUuid(rowUuid)"
         :isAddRowButtonEnabled="rowUuids.length < maxTransactionRowsNum"
@@ -61,6 +63,16 @@ const TransactionForm = Vue.extend({
       required: true,
     },
 
+    projectTokens: {
+      type: Set,
+      required: true,
+    },
+
+    projectExchanges: {
+      type: Set,
+      required: true,
+    },
+
     transaction: {
       type: Object,
       required: false,
@@ -71,10 +83,6 @@ const TransactionForm = Vue.extend({
       required: false,
       default: 10,
     },
-  },
-
-  components: {
-    TransactionRowForm,
   },
 
   data() {
@@ -132,6 +140,10 @@ const TransactionForm = Vue.extend({
 
   mounted() {
     this.addRowForm();
+  },
+
+  components: {
+    TransactionRowForm,
   },
 });
 

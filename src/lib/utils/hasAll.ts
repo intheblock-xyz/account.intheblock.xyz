@@ -7,7 +7,7 @@ export function hasAll<
   if (Array.isArray(collection)) {
     return every(values.map((value) => collection.includes(value)));
   } else {
-    const keys = Object.keys(collection);
+    const keys = Object.keys(collection as Record<string, unknown>);
     return every(values.map((value) => keys.includes(String(value))));
   }
 }
