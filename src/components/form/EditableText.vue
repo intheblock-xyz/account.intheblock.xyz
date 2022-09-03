@@ -25,6 +25,7 @@
         :size="inputSize"
         @blur="blur"
         @keypress.native.enter="submit"
+        @keydown.native.esc="blur"
       ></b-input>
     </b-field>
   </div>
