@@ -229,6 +229,18 @@ const TransactionRowForm = Vue.extend({
       this.labelTitles = labelTitles;
       this.labelTexts = labelTexts;
     },
+
+    tokenTickersList(tickersList: string[]) {
+      if (!tickersList.includes(this.currencyTicker)) {
+        this.currencyTicker = tickersList[0];
+      }
+    },
+
+    exchangeTickersList(tickersList: string[]) {
+      if (!tickersList.includes(this.currencyTickerVs)) {
+        this.currencyTickerVs = tickersList[0];
+      }
+    },
   },
 
   mounted() {
