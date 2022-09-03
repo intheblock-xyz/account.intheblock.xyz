@@ -21,12 +21,14 @@
         >
         </b-input>
         <b-input
+          v-if="showGeckoIdInput"
           v-model="currency.geckoId"
           @keypress.native.enter="addCurrency"
           placeholder="Gecko ID"
         >
         </b-input>
         <b-input
+          v-if="showGeckoVsIdInput"
           v-model="currency.geckoVsId"
           @keypress.native.enter="addCurrency"
           placeholder="Gecko vs ID"
@@ -64,8 +66,9 @@ import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 import { ICurrency } from "@/core/currency";
 
-interface ICurrencyInput extends ICurrency {
+interface ICurrencyFormData extends Omit<ICurrency, "precision"> {
   uuid: string;
+  precision: string;
 }
 
 const PreferencesCurrencyFormSet = Vue.extend({
@@ -89,6 +92,18 @@ const PreferencesCurrencyFormSet = Vue.extend({
       required: true,
     },
 
+    showGeckoIdInput: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+
+    showGeckoVsIdInput: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+
     focusOnMount: {
       type: Boolean,
       required: false,
@@ -105,9 +120,9 @@ const PreferencesCurrencyFormSet = Vue.extend({
           ticker,
           geckoId,
           geckoVsId,
-          precision,
+          precision: precision ? precision.toString() : "",
         }),
-      ) as ICurrencyInput[],
+      ) as ICurrencyFormData[],
     };
   },
 
@@ -119,7 +134,7 @@ const PreferencesCurrencyFormSet = Vue.extend({
         ticker: "",
         geckoId: "",
         geckoVsId: "",
-        precision: 2,
+        precision: "",
       });
       this.$nextTick(this.focusFirst);
     },
@@ -150,7 +165,7 @@ const PreferencesCurrencyFormSet = Vue.extend({
               ticker,
               geckoId,
               geckoVsId,
-              precision,
+              precision: precision ? parseInt(precision) : undefined,
             })),
         ),
       };
@@ -198,15 +213,7 @@ export type TPreferencesCurrencyFormSet = InstanceType<
   flex-basis: 20%;
 }
 
-.currencyInputsRow > :nth-child(4) {
-  flex-basis: 20%;
-}
-
-.currencyInputsRow > :nth-child(5) {
-  flex-basis: 15%;
-}
-
-.currencyInputsRow > :nth-child(6) {
+.currencyInputsRow > :last-child {
   flex-basis: 40px;
 }
 </style>

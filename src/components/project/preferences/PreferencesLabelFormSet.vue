@@ -26,7 +26,7 @@
 import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 
-interface ILabelTitleInput {
+interface ILabelTitleFormData {
   uuid: string;
   value: string;
 }
@@ -52,7 +52,7 @@ const PreferencesLabelFormSet = Vue.extend({
       labelTitles: Array.from(this.initialLabelTitles).map((value) => ({
         uuid: uuidv4(),
         value,
-      })) as ILabelTitleInput[],
+      })) as ILabelTitleFormData[],
     };
   },
 

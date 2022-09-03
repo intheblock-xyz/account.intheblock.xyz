@@ -24,11 +24,10 @@
           <PreferencesCurrencyFormSet
             v-if="account.isSignedIn"
             ref="tokenFormSet"
-            :initialCurrencies="
-              new Set([{ ticker: 'ADA', name: 'Cardano Ada' }])
-            "
+            showGeckoIdInput
             heading="Tokens"
             unit="token"
+            :initialCurrencies="initialTokens"
             @submit="submit"
           />
           <b-message v-else type="is-warning" has-icon>
@@ -37,8 +36,9 @@
           <PreferencesCurrencyFormSet
             v-if="account.isSignedIn"
             ref="exchangeFormSet"
-            :initialCurrencies="new Set([{ ticker: 'USD', name: 'US Dollar' }])"
+            showGeckoVsIdInput
             heading="Exchange"
+            :initialCurrencies="initialExchanges"
             @submit="submit"
           />
         </b-tab-item>
@@ -82,6 +82,16 @@ export default Vue.extend({
       type: Set,
       required: true,
     },
+
+    initialTokens: {
+      type: Set,
+      required: true,
+    },
+
+    initialExchanges: {
+      type: Set,
+      required: true,
+    },
   },
 
   data() {
@@ -98,11 +108,17 @@ export default Vue.extend({
       const generalFormRef = this.$refs.generalForm as TPreferencesGeneralForm;
       const labelFormSetRef = this.$refs
         .labelFormSet as TPreferencesLabelFormSet;
+      const tokenFormSetRef = this.$refs
+        .tokenFormSet as TPreferencesCurrencyFormSet;
+      const exchangeFormSetRef = this.$refs
+        .exchangeFormSet as TPreferencesCurrencyFormSet;
 
       // construct preferences object
       const projectPreferences: IProjectPreferences = {
         ...generalFormRef.getFormData(),
-        ...labelFormSetRef.getFormData(),
+        labelTitles: labelFormSetRef.getFormData().labelTitles,
+        tokens: tokenFormSetRef.getFormData().currencies,
+        exchanges: exchangeFormSetRef.getFormData().currencies,
       };
 
       // call upper handlers

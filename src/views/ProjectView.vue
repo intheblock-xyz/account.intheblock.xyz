@@ -68,6 +68,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { ICurrency } from "@/core/currency";
 import {
   getLastEditedProject,
   getNewProject,
@@ -109,6 +110,8 @@ export default Vue.extend({
       editedAt: 0,
       transactions: [],
       projectLabelTitles: new Set<string>(),
+      projectTokens: new Set<ICurrency>(),
+      projectExchanges: new Set<ICurrency>(),
 
       isLoaded: false,
       isFormVisible: false,
@@ -128,8 +131,20 @@ export default Vue.extend({
       }, new Set<string>());
     },
 
-    essentials(): [string, ITransaction[], Set<string>] {
-      return [this.title, this.transactions, this.projectLabelTitles];
+    essentials(): [
+      string,
+      ITransaction[],
+      Set<string>,
+      Set<ICurrency>,
+      Set<ICurrency>,
+    ] {
+      return [
+        this.title,
+        this.transactions,
+        this.projectLabelTitles,
+        this.projectTokens,
+        this.projectExchanges,
+      ];
     },
   },
 
@@ -142,6 +157,8 @@ export default Vue.extend({
         editedAt,
         transactions,
         projectLabelTitles,
+        projectTokens,
+        projectExchanges,
       } = project;
 
       this.isLoaded = false;
@@ -152,6 +169,8 @@ export default Vue.extend({
       this.transactions = transactions;
 
       this.projectLabelTitles = new Set<string>(projectLabelTitles);
+      this.projectTokens = new Set<ICurrency>(projectTokens);
+      this.projectExchanges = new Set<ICurrency>(projectExchanges);
 
       this.$nextTick(() => (this.isLoaded = true));
     },
@@ -160,8 +179,16 @@ export default Vue.extend({
       this.title = title;
     },
 
-    updateTransactionsLabels(labelTitles: Set<string>) {
+    updateProjectLabelTitles(labelTitles: Set<string>) {
       this.projectLabelTitles = labelTitles;
+    },
+
+    updateProjectTokens(tokens: Set<ICurrency>) {
+      this.projectTokens = tokens;
+    },
+
+    updateProjectExchanges(exchanges: Set<ICurrency>) {
+      this.projectExchanges = exchanges;
     },
 
     touchEditedTimestamp() {
@@ -186,6 +213,8 @@ export default Vue.extend({
         props: {
           initialTitle: this.title,
           initialLabelTitles: this.projectLabelTitles,
+          initialTokens: this.projectTokens,
+          initialExchanges: this.projectExchanges,
         },
         events: {
           submit: this.preferencesSubmit,
@@ -194,9 +223,11 @@ export default Vue.extend({
     },
 
     preferencesSubmit(preferences: IProjectPreferences) {
-      const { title, labelTitles } = preferences;
+      const { title, labelTitles, tokens, exchanges } = preferences;
       this.updateTitle(title);
-      this.updateTransactionsLabels(labelTitles);
+      this.updateProjectLabelTitles(labelTitles);
+      this.updateProjectTokens(tokens);
+      this.updateProjectExchanges(exchanges);
     },
 
     importFile() {
