@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { ICurrency } from "../currency";
+import { ICurrency } from "../app";
 import { ITransaction } from "../transaction";
 
 export interface IProject {

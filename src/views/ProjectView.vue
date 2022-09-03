@@ -68,7 +68,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ICurrency } from "@/core/currency";
+import { ICurrency } from "@/core/app";
 import {
   getLastEditedProject,
   getNewProject,

@@ -1,4 +1,4 @@
-import { ICurrency } from "../currency";
+import { ICurrency } from "../app";
 
 export interface IProjectPreferences {
   title: string;

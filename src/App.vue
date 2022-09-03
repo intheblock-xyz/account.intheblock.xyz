@@ -7,20 +7,23 @@
 
 <script>
 import Vue from "vue";
+import { saveIsSignedIn, loadIsSignedIn } from "@/core/app";
 import PageHeader from "@/components/layout/PageHeader.vue";
 
 export default Vue.extend({
   name: "App",
 
-  components: {
-    PageHeader,
-  },
-
   data() {
     return {
       account: {
-        isSignedIn: false,
+        isSignedIn: null,
       },
+    };
+  },
+
+  provide() {
+    return {
+      account: this.account,
     };
   },
 
@@ -34,10 +37,20 @@ export default Vue.extend({
     },
   },
 
-  provide() {
-    return {
-      account: this.account,
-    };
+  watch: {
+    ["account.isSignedIn"](newIsSignedIn, oldIsSignedIn) {
+      if (oldIsSignedIn !== null) {
+        saveIsSignedIn(newIsSignedIn);
+      }
+    },
+  },
+
+  created() {
+    this.account.isSignedIn = loadIsSignedIn();
+  },
+
+  components: {
+    PageHeader,
   },
 });
 </script>

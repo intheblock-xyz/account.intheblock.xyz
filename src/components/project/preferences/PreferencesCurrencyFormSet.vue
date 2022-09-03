@@ -64,7 +64,7 @@
 <script lang="ts">
 import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
-import { ICurrency } from "@/core/currency";
+import { ICurrency } from "@/core/app";
 
 interface ICurrencyFormData extends Omit<ICurrency, "precision"> {
   uuid: string;
