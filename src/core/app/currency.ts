@@ -7,7 +7,7 @@ export interface ICurrency {
 }
 
 export interface ICurrencyRate {
-  currency: ICurrency;
-  currencyVs: ICurrency;
+  currencyTicker: string;
+  currencyTickerVs: string;
   value: number;
 }

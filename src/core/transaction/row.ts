@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import { ICurrency } from "../app";
 import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 
 export interface ITransactionRow extends ILabels {
@@ -7,8 +6,8 @@ export interface ITransactionRow extends ILabels {
   createdAt: number;
   editedAt: number;
   amount: number;
-  currency: ICurrency;
-  currencyVs: ICurrency;
+  currencyTicker: string;
+  currencyTickerVs: string;
 }
 
 export interface ITransactionRowForm extends ILabelsForm {
@@ -56,8 +55,8 @@ export function cleanTransactionRowFormValues(
     createdAt: transactionRow?.createdAt || now,
     editedAt: now,
     amount: parseFloat(formData.amount),
-    currency: { ticker: formData.currencyTicker },
-    currencyVs: { ticker: formData.currencyTickerVs },
+    currencyTicker: formData.currencyTicker,
+    currencyTickerVs: formData.currencyTickerVs,
     labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),
   };
 }

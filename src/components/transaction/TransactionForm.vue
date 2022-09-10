@@ -130,8 +130,10 @@ const TransactionForm = Vue.extend({
             (rowForm) => rowForm.uuid,
           ),
         },
-        transaction: this.transaction,
-        transactionDirection,
+        transaction: {
+          ...this.transaction,
+          direction: transactionDirection || this.transaction.direction,
+        },
       };
     },
   },

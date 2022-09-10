@@ -65,6 +65,18 @@
       @addTransaction="addTransaction"
       @makePayment="makePayment"
     />
+
+    <hr />
+
+    <TransactionsTable
+      v-if="!isFormVisible"
+      :transactions="transactions"
+      :projectLabelTitles="projectLabelTitles"
+      :projectTokens="projectTokens"
+      :projectExchanges="projectExchanges"
+      @editTransaction="editTransaction"
+      @removeTransaction="removeTransaction"
+    />
   </div>
 </template>
 
@@ -94,16 +106,10 @@ import TransactionForm, {
   TTransactionForm,
 } from "@/components/transaction/TransactionForm.vue";
 import { TTransactionRowForm } from "@/components/transaction/TransactionRowForm.vue";
+import { TransactionsTable } from "@/components/transaction";
 
 export default Vue.extend({
   name: "ProjectView",
-
-  components: {
-    EditableText,
-    ProjectActions,
-    ProjectToolbar,
-    TransactionForm,
-  },
 
   data() {
     const data: IProjectData = {
@@ -130,8 +136,8 @@ export default Vue.extend({
   computed: {
     transactionsCurrencyTickers(): Set<string> {
       return this.transactions.reduce((tickers, transaction) => {
-        transaction.rows.forEach(({ currency }) => {
-          tickers.add(currency.ticker);
+        transaction.rows.forEach(({ currencyTicker }) => {
+          tickers.add(currencyTicker);
         });
         return tickers;
       }, new Set<string>());
@@ -293,7 +299,7 @@ export default Vue.extend({
 
       // throw an error if there is new transaction without direction specified
       if (!transaction && !transactionDirection) {
-        throw new Error("Missed new transaction direction");
+        throw new Error("Transaction direction missed");
       }
 
       // get transaction rows forms data
@@ -316,23 +322,33 @@ export default Vue.extend({
         formData,
         rowsFormData,
         transaction,
+        transactionDirection,
       );
 
       // update transactions array
-      // if (!transaction) {
-      //   this.transactions.push(updatedTransaction);
-      // } else {
-      //   const transactionUuid = transaction.uuid;
-      //   const transactionIndex = this.transactions.findIndex(
-      //     ({ uuid }) => uuid === transactionUuid,
-      //   );
-      //   this.transactions.splice(transactionIndex, 1, updatedTransaction);
-      // }
-
-      console.log({ formData, rowsFormData, updatedTransaction });
+      if (!this.transactions.find(({ uuid }) => uuid === transaction?.uuid)) {
+        this.transactions.push(updatedTransaction);
+      } else {
+        const transactionUuid = transaction.uuid;
+        const transactionIndex = this.transactions.findIndex(
+          ({ uuid }) => uuid === transactionUuid,
+        );
+        this.transactions.splice(transactionIndex, 1, updatedTransaction);
+      }
 
       // hide the form
       this.hideTransactionForm();
+    },
+
+    editTransaction(uuid: string) {
+      console.log("editTransaction", uuid);
+    },
+
+    removeTransaction(uuid: string) {
+      const transactionIndex = this.transactions.findIndex(
+        (transaction) => uuid === transaction.uuid,
+      );
+      this.transactions.splice(transactionIndex, 1);
     },
   },
 
@@ -351,6 +367,14 @@ export default Vue.extend({
 
   created() {
     this.loadLastStoredProject();
+  },
+
+  components: {
+    EditableText,
+    ProjectActions,
+    ProjectToolbar,
+    TransactionForm,
+    TransactionsTable,
   },
 });
 </script>
