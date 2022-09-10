@@ -1,15 +1,7 @@
 <template>
   <div class="columns is-multiline">
     <div class="column is-12">
-      <b-table
-        :data="tableData"
-        default-sort="date"
-        default-sort-direction="desc"
-        paginated
-        pagination-size="is-small"
-        pagination-simple
-        per-page="10"
-      >
+      <b-table :data="tableData">
         <b-table-column field="index" label="#" v-slot="props" width="55">
           {{ props.row.index }}
         </b-table-column>

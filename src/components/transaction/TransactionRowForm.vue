@@ -129,7 +129,7 @@
 
 <script lang="ts">
 import Vue from "vue";
-import { ICurrency } from "@/core/app";
+import { ICurrency, ICurrencyRate } from "@/core/app";
 import {
   getLabelsForm,
   getTransactionRowForm,
@@ -165,6 +165,11 @@ const TransactionRowForm = Vue.extend({
       required: false,
     },
 
+    rates: {
+      type: Array,
+      required: false,
+    },
+
     isAddRowButtonEnabled: {
       type: Boolean,
       required: false,
@@ -183,6 +188,7 @@ const TransactionRowForm = Vue.extend({
       this.projectLabelTitles as Set<string>,
       this.transactionRowUuid,
       this.transactionRow,
+      this.rates as ICurrencyRate[],
     );
   },
 

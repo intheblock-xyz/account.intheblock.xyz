@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { ICurrencyRate } from "../app";
 import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 
 export interface ITransactionRow extends ILabels {
@@ -28,18 +29,34 @@ export function getTransactionRowForm(
   projectLabelTitles: Set<string>,
   transactionRowUuid?: string,
   transactionRow?: ITransactionRow,
+  rates?: ICurrencyRate[],
 ): ITransactionRowForm {
+  const currencyTicker = transactionRow?.currencyTicker || "";
+  const currencyTickerVs = transactionRow?.currencyTickerVs || "";
+  const rate = rates
+    ? rates
+        .find(
+          (rate) =>
+            currencyTicker === rate.currencyTicker &&
+            currencyTickerVs === rate.currencyTickerVs,
+        )
+        ?.value.toString() || ""
+    : "";
+  const amount = transactionRow?.amount.toString() || "";
+  const amountVs = rate
+    ? (parseFloat(rate) * parseFloat(amount)).toString()
+    : "";
   const [labelTitles, labelTexts] = getLabelsForm(
     projectLabelTitles,
     transactionRow,
   );
   return {
     uuid: transactionRowUuid || transactionRow?.uuid || uuidv4(),
-    amount: "",
-    amountVs: "",
-    currencyTicker: "",
-    currencyTickerVs: "",
-    rate: "",
+    amount,
+    amountVs,
+    currencyTicker,
+    currencyTickerVs,
+    rate,
     labelTitles,
     labelTexts,
   };

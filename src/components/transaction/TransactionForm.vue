@@ -32,6 +32,7 @@
         :transactionRow="getTransactionRowByUuid(rowUuid)"
         :isAddRowButtonEnabled="rowUuids.length < maxTransactionRowsNum"
         :isRemoveRowButtonEnabled="rowUuids.length > 1"
+        :rates="transaction ? transaction.rates : undefined"
         ref="rowForms"
         @submit="$emit('submit')"
         @addRowForm="addRowForm"
@@ -141,7 +142,9 @@ const TransactionForm = Vue.extend({
   watch: {},
 
   mounted() {
-    this.addRowForm();
+    if (!this.transaction) {
+      this.addRowForm();
+    }
   },
 
   components: {

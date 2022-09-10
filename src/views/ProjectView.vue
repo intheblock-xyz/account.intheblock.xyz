@@ -30,6 +30,7 @@
           :projectLabelTitles="projectLabelTitles"
           :projectTokens="projectTokens"
           :projectExchanges="projectExchanges"
+          :transaction="editingTransaction"
           :maxTransactionRowsNum="maxTransactionRowsNum"
           @submit="editingTransaction && transactionFormSubmit()"
         />
@@ -341,7 +342,11 @@ export default Vue.extend({
     },
 
     editTransaction(uuid: string) {
-      console.log("editTransaction", uuid);
+      const transaction = this.transactions.find((t) => t.uuid === uuid);
+      if (!transaction) {
+        throw new Error("Transaction not found");
+      }
+      this.showTransactionForm(transaction);
     },
 
     removeTransaction(uuid: string) {
