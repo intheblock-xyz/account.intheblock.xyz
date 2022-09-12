@@ -20,7 +20,6 @@ export function getCurrencyPrecision(
   const precision = Array.from(currencies).find(
     (currency) => currency.ticker === ticker,
   )?.precision;
-
   return typeof precision === "number" ? precision : dflt;
 }
 

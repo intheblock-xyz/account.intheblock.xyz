@@ -8,6 +8,7 @@
         :step="getCurrencyInputStep(currencyTicker)"
         :min="getCurrencyInputStep(currencyTicker)"
         :size="account.isSignedIn ? 'is-small' : undefined"
+        @keyup.native="adjustFormDataFromAmount"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -48,6 +49,7 @@
         :step="getCurrencyInputStep(currencyTickerVs)"
         :min="getCurrencyInputStep(currencyTickerVs)"
         :size="account.isSignedIn ? 'is-small' : undefined"
+        @keyup.native="adjustFormDataFromExchange"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
 
@@ -88,6 +90,7 @@
         min="0.000000001"
         v-model="rate"
         :size="account.isSignedIn ? 'is-small' : undefined"
+        @keyup.native="adjustFormDataFromRate"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -213,6 +216,79 @@ const TransactionRowForm = Vue.extend({
   },
 
   methods: {
+    adjustFormDataFromAmount(e: Event) {
+      const rate = parseFloat(this.rate);
+      if (rate) {
+        const exchangePrecision = getCurrencyPrecision(
+          Array.from(this.projectExchanges) as ICurrency[],
+          this.currencyTickerVs,
+        );
+        const value = parseFloat((e.target as HTMLInputElement).value);
+        let amountVs = "";
+        if (value === 0) {
+          amountVs = "0";
+        } else if (value) {
+          amountVs = (value * rate).toFixed(exchangePrecision);
+        }
+        this.amountVs = amountVs;
+        this.lastTouched = "amount";
+      }
+    },
+
+    adjustFormDataFromExchange(e: Event) {
+      const rate = parseFloat(this.rate);
+      if (rate) {
+        const amountPrecision = getCurrencyPrecision(
+          Array.from(this.projectTokens) as ICurrency[],
+          this.currencyTicker,
+        );
+        const value = parseFloat((e.target as HTMLInputElement).value);
+        let amount = "";
+        if (value === 0) {
+          amount = "0";
+        } else if (value) {
+          amount = (value / rate).toFixed(amountPrecision);
+        }
+        this.amount = amount.toString();
+        this.lastTouched = "exchange";
+      }
+    },
+
+    adjustFormDataFromRate(e: Event) {
+      const rate = e
+        ? parseFloat((e.target as HTMLInputElement).value)
+        : parseFloat(this.rate);
+      if (rate) {
+        if (this.lastTouched === "amount") {
+          const amount = parseFloat(this.amount);
+          const exchangePrecision = getCurrencyPrecision(
+            Array.from(this.projectExchanges) as ICurrency[],
+            this.currencyTickerVs,
+          );
+          let amountVs = "";
+          if (amount === 0) {
+            amountVs = "0";
+          } else if (amount) {
+            amountVs = (amount * rate).toFixed(exchangePrecision);
+          }
+          this.amountVs = amountVs.toString();
+        } else {
+          const amountVs = parseFloat(this.amountVs);
+          const amountPrecision = getCurrencyPrecision(
+            Array.from(this.projectTokens) as ICurrency[],
+            this.currencyTicker,
+          );
+          let amount = "";
+          if (amountVs === 0) {
+            amount = "0";
+          } else if (amountVs) {
+            amount = (amountVs / rate).toFixed(amountPrecision);
+          }
+          this.amount = amount.toString();
+        }
+      }
+    },
+
     getCurrencyInputStep(ticker: string): string {
       const precision = getCurrencyPrecision(
         Array.from(this.projectTokens).concat(
@@ -234,6 +310,7 @@ const TransactionRowForm = Vue.extend({
           rate: this.rate,
           labelTitles: Array.from(this.labelTitles),
           labelTexts: Array.from(this.labelTexts),
+          lastTouched: this.lastTouched,
         },
         transactionRow: this.transactionRow,
       };

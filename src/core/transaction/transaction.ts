@@ -40,6 +40,34 @@ export function getTransactionForm(
   };
 }
 
+function getRatesFromRowsFormData(
+  rowsFormData: ITransactionRowForm[],
+): ICurrencyRate[] {
+  return rowsFormData.reduce(
+    (rates, { currencyTicker, currencyTickerVs, rate }) => {
+      const value = parseFloat(rate);
+      if (!value) {
+        throw new Error("Rate missed");
+      }
+      if (
+        !rates.find(
+          (rate) =>
+            rate.currencyTicker === currencyTicker &&
+            rate.currencyTickerVs === currencyTickerVs,
+        )
+      ) {
+        rates.push({
+          currencyTicker,
+          currencyTickerVs,
+          value,
+        });
+      }
+      return rates;
+    },
+    [] as ICurrencyRate[],
+  );
+}
+
 export function cleanTransactionFormValues(
   formData: ITransactionForm,
   rowsFormData?: ITransactionRowForm[],
@@ -61,29 +89,7 @@ export function cleanTransactionFormValues(
       )
     : transaction?.rows || [];
   const rates = rowsFormData
-    ? rowsFormData.reduce(
-        (rates, { currencyTicker, currencyTickerVs, rate }) => {
-          const value = parseFloat(rate);
-          if (!value) {
-            throw new Error("Rate missed");
-          }
-          if (
-            !rates.find(
-              (rate) =>
-                rate.currencyTicker === currencyTicker &&
-                rate.currencyTickerVs === currencyTickerVs,
-            )
-          ) {
-            rates.push({
-              currencyTicker,
-              currencyTickerVs,
-              value,
-            });
-          }
-          return rates;
-        },
-        [] as ICurrencyRate[],
-      )
+    ? getRatesFromRowsFormData(rowsFormData)
     : transaction?.rates || [];
   return {
     uuid: formData.uuid,

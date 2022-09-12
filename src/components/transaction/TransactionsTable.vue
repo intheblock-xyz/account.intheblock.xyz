@@ -94,7 +94,7 @@ import orderBy from "lodash/orderBy";
 import moment from "moment";
 import Vue from "vue";
 import { ITransaction, ITransactionRow } from "@/core/transaction";
-import { getCurrencyRate, ICurrency } from "@/core/app";
+import { getCurrencyRate } from "@/core/app";
 
 interface ITableDataRow {
   uuid: string;

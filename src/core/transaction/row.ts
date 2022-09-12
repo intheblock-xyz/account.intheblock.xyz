@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { ICurrencyRate } from "../app";
+import { getCurrencyRate, ICurrencyRate } from "../app";
 import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 
 export interface ITransactionRow extends ILabels {
@@ -10,6 +10,7 @@ export interface ITransactionRow extends ILabels {
   amountVs: number;
   currencyTicker: string;
   currencyTickerVs: string;
+  lastTouched: "amount" | "exchange";
 }
 
 export interface ITransactionRowForm extends ILabelsForm {
@@ -19,6 +20,7 @@ export interface ITransactionRowForm extends ILabelsForm {
   currencyTicker: string;
   currencyTickerVs: string;
   rate: string;
+  lastTouched: "amount" | "exchange";
 }
 
 export interface ITransactionRowFormSubmit {
@@ -32,17 +34,16 @@ export function getTransactionRowForm(
   transactionRow?: ITransactionRow,
   rates?: ICurrencyRate[],
 ): ITransactionRowForm {
+  let rate = "";
   const currencyTicker = transactionRow?.currencyTicker || "";
   const currencyTickerVs = transactionRow?.currencyTickerVs || "";
-  const rate = rates
-    ? rates
-        .find(
-          (rate) =>
-            currencyTicker === rate.currencyTicker &&
-            currencyTickerVs === rate.currencyTickerVs,
-        )
-        ?.value.toString() || ""
-    : "";
+  if (transactionRow && rates) {
+    rate = getCurrencyRate(
+      rates,
+      transactionRow.currencyTicker,
+      transactionRow.currencyTickerVs,
+    ).toString();
+  }
   const amount = transactionRow?.amount.toString() || "";
   const amountVs = transactionRow?.amountVs.toString() || "";
   const [labelTitles, labelTexts] = getLabelsForm(
@@ -58,6 +59,7 @@ export function getTransactionRowForm(
     rate,
     labelTitles,
     labelTexts,
+    lastTouched: transactionRow?.lastTouched || "amount",
   };
 }
 
@@ -75,5 +77,6 @@ export function cleanTransactionRowFormValues(
     currencyTicker: formData.currencyTicker,
     currencyTickerVs: formData.currencyTickerVs,
     labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),
+    lastTouched: formData.lastTouched,
   };
 }
