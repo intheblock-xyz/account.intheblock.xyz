@@ -2,37 +2,20 @@
   <div class="columns is-multiline">
     <div class="column is-12">
       <b-table :data="tableData">
-        <b-table-column field="index" label="#" v-slot="props" width="55">
-          {{ props.row.index }}
-        </b-table-column>
-
         <b-table-column field="date" label="Date" v-slot="props" width="205">
-          {{ props.row.type === "tx" ? props.row.date : "" }}
+          {{ props.row.date }}
         </b-table-column>
 
-        <b-table-column field="in" label="In" v-slot="props" numeric>
-          {{ props.row.type === "row" ? props.row.in || "&ndash;" : "" }}
+        <b-table-column field="in" label="Ada In" v-slot="props" numeric>
+          {{ props.row.in || "&ndash;" }}
         </b-table-column>
 
-        <b-table-column field="out" label="Out" v-slot="props" numeric>
-          {{ props.row.type === "row" ? props.row.out || "&ndash;" : "" }}
+        <b-table-column field="out" label="Ada Out" v-slot="props" numeric>
+          {{ props.row.out || "&ndash;" }}
         </b-table-column>
 
-        <b-table-column field="tokenTicker" label="Ticker" v-slot="props">
-          {{ props.row.tokenTicker }}
-        </b-table-column>
-
-        <b-table-column
-          field="exchange"
-          label="Exchange"
-          v-slot="props"
-          numeric
-        >
-          {{ props.row.type === "row" ? props.row.exchange : "" }}
-        </b-table-column>
-
-        <b-table-column field="exchangeTicker" label="Ticker" v-slot="props">
-          {{ props.row.exchangeTicker }}
+        <b-table-column field="exchange" label="USD" v-slot="props" numeric>
+          {{ props.row.exchange }}
         </b-table-column>
 
         <b-table-column field="rate" label="Rate" v-slot="props" numeric>
@@ -47,15 +30,11 @@
           v-slot="props"
           width="240"
         >
-          {{
-            props.row.type === "row"
-              ? getLabelText(props.row, label) || "&ndash;"
-              : ""
-          }}
+          {{ getLabelText(props.row, label) || "&ndash;" }}
         </b-table-column>
 
         <b-table-column custom-key="actions" v-slot="props" width="70">
-          <div class="actionButtons" v-if="props.row.type === 'tx'">
+          <div class="actionButtons">
             <b-button
               size="is-small"
               icon-left="pencil-outline"
@@ -99,19 +78,15 @@ import { getCurrencyRate } from "@/core/app";
 interface ITableDataRow {
   uuid: string;
   date: string;
-  index: string;
-  type: "tx" | "row";
   in?: string;
   out?: string;
-  tokenTicker?: string;
   exchange?: string;
-  exchangeTicker?: string;
   rate?: string;
   labels?: { title: string; text: string }[];
 }
 
-const TransactionsTable = Vue.extend({
-  name: "TransactionsTable",
+const TransactionsTableSimple = Vue.extend({
+  name: "TransactionsTableSimple",
 
   props: {
     transactions: {
@@ -145,15 +120,9 @@ const TransactionsTable = Vue.extend({
             "YYYY-MM-DD",
           );
           const txRates = transaction.rates;
-          // create heading row
-          tableData.push({
-            uuid: transaction.uuid,
-            date: txDate,
-            index: `${this.transactions.length - txIdx}`,
-            type: "tx",
-          });
-          // create table rows from transaction rows
-          transaction.rows.forEach((row, rowIdx) => {
+          // create table row from transaction row
+          const row = transaction.rows[0];
+          if (row) {
             const rate = getCurrencyRate(
               txRates,
               row.currencyTicker,
@@ -162,19 +131,15 @@ const TransactionsTable = Vue.extend({
             const amount = row.amount.toString();
             const amountVs = row.amountVs.toString();
             tableData.push({
-              uuid: row.uuid,
+              uuid: transaction.uuid,
               date: txDate,
-              index: `${this.transactions.length - txIdx}.${rowIdx + 1}`,
-              type: "row",
               in: transaction.direction === "receive" ? amount : undefined,
               out: transaction.direction === "pay" ? `-${amount}` : undefined,
-              tokenTicker: row.currencyTicker,
               exchange: amountVs,
-              exchangeTicker: row.currencyTickerVs,
               rate: rate >= 1 ? rate.toFixed(2) : rate.toPrecision(5),
               labels: row.labels,
             });
-          });
+          }
           return tableData;
         },
         [],
@@ -190,7 +155,7 @@ const TransactionsTable = Vue.extend({
   },
 });
 
-export default TransactionsTable;
+export default TransactionsTableSimple;
 </script>
 
 <style scoped>

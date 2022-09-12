@@ -231,8 +231,8 @@ const TransactionRowForm = Vue.extend({
           amountVs = (value * rate).toFixed(exchangePrecision);
         }
         this.amountVs = amountVs;
-        this.lastTouched = "amount";
       }
+      this.lastTouched = "amount";
     },
 
     adjustFormDataFromExchange(e: Event) {
@@ -250,8 +250,8 @@ const TransactionRowForm = Vue.extend({
           amount = (value / rate).toFixed(amountPrecision);
         }
         this.amount = amount.toString();
-        this.lastTouched = "exchange";
       }
+      this.lastTouched = "exchange";
     },
 
     adjustFormDataFromRate(e: Event) {

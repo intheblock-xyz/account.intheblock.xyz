@@ -70,7 +70,17 @@
     <hr />
 
     <TransactionsTable
-      v-if="!isFormVisible"
+      v-if="!isFormVisible && account.isSignedIn"
+      :transactions="transactions"
+      :projectLabelTitles="projectLabelTitles"
+      :projectTokens="projectTokens"
+      :projectExchanges="projectExchanges"
+      @editTransaction="editTransaction"
+      @removeTransaction="removeTransaction"
+    />
+
+    <TransactionsTableSimple
+      v-if="!isFormVisible && !account.isSignedIn"
       :transactions="transactions"
       :projectLabelTitles="projectLabelTitles"
       :projectTokens="projectTokens"
@@ -107,7 +117,10 @@ import TransactionForm, {
   TTransactionForm,
 } from "@/components/transaction/TransactionForm.vue";
 import { TTransactionRowForm } from "@/components/transaction/TransactionRowForm.vue";
-import { TransactionsTable } from "@/components/transaction";
+import {
+  TransactionsTable,
+  TransactionsTableSimple,
+} from "@/components/transaction";
 
 export default Vue.extend({
   name: "ProjectView",
@@ -380,6 +393,7 @@ export default Vue.extend({
     ProjectToolbar,
     TransactionForm,
     TransactionsTable,
+    TransactionsTableSimple,
   },
 });
 </script>
