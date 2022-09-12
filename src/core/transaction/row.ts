@@ -7,6 +7,7 @@ export interface ITransactionRow extends ILabels {
   createdAt: number;
   editedAt: number;
   amount: number;
+  amountVs: number;
   currencyTicker: string;
   currencyTickerVs: string;
 }
@@ -43,9 +44,7 @@ export function getTransactionRowForm(
         ?.value.toString() || ""
     : "";
   const amount = transactionRow?.amount.toString() || "";
-  const amountVs = rate
-    ? (parseFloat(rate) * parseFloat(amount)).toString()
-    : "";
+  const amountVs = transactionRow?.amountVs.toString() || "";
   const [labelTitles, labelTexts] = getLabelsForm(
     projectLabelTitles,
     transactionRow,
@@ -72,6 +71,7 @@ export function cleanTransactionRowFormValues(
     createdAt: transactionRow?.createdAt || now,
     editedAt: now,
     amount: parseFloat(formData.amount),
+    amountVs: parseFloat(formData.amountVs),
     currencyTicker: formData.currencyTicker,
     currencyTickerVs: formData.currencyTickerVs,
     labels: cleanLabelsForm(formData.labelTitles, formData.labelTexts),

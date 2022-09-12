@@ -4,8 +4,9 @@
       <b-input
         required
         type="number"
-        step="0.01"
         v-model="amount"
+        :step="getCurrencyInputStep(currencyTicker)"
+        :min="getCurrencyInputStep(currencyTicker)"
         :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
@@ -43,8 +44,9 @@
       <b-input
         required
         type="number"
-        step="0.01"
         v-model="amountVs"
+        :step="getCurrencyInputStep(currencyTickerVs)"
+        :min="getCurrencyInputStep(currencyTickerVs)"
         :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
@@ -82,7 +84,8 @@
       <b-input
         required
         type="number"
-        step="0.000001"
+        step="0.000000001"
+        min="0.000000001"
         v-model="rate"
         :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
@@ -128,8 +131,9 @@
 </template>
 
 <script lang="ts">
+import repeat from "lodash/repeat";
 import Vue from "vue";
-import { ICurrency, ICurrencyRate } from "@/core/app";
+import { getCurrencyPrecision, ICurrency, ICurrencyRate } from "@/core/app";
 import {
   getLabelsForm,
   getTransactionRowForm,
@@ -209,6 +213,16 @@ const TransactionRowForm = Vue.extend({
   },
 
   methods: {
+    getCurrencyInputStep(ticker: string): string {
+      const precision = getCurrencyPrecision(
+        Array.from(this.projectTokens).concat(
+          Array.from(this.projectExchanges),
+        ) as ICurrency[],
+        ticker,
+      );
+      return precision === 0 ? "1" : `0.${repeat("0", precision - 1)}1`;
+    },
+
     getFormSubmit(): ITransactionRowFormSubmit {
       return {
         formData: {

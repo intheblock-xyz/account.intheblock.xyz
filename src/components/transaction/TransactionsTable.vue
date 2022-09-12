@@ -90,11 +90,11 @@
 </template>
 
 <script lang="ts">
-import get from "lodash/get";
+import orderBy from "lodash/orderBy";
 import moment from "moment";
 import Vue from "vue";
 import { ITransaction, ITransactionRow } from "@/core/transaction";
-import { ICurrency } from "@/core/app";
+import { getCurrencyRate, ICurrency } from "@/core/app";
 
 interface ITableDataRow {
   uuid: string;
@@ -139,7 +139,9 @@ const TransactionsTable = Vue.extend({
 
   computed: {
     tableData(): ITableDataRow[] {
-      return (this.transactions as ITransaction[]).reduce(
+      return (
+        orderBy(this.transactions, ["processedAt"], ["desc"]) as ITransaction[]
+      ).reduce(
         (tableData: ITableDataRow[], transaction: ITransaction, txIdx) => {
           const txDate = moment(new Date(transaction.processedAt)).format(
             "YYYY-MM-DD",
@@ -149,39 +151,29 @@ const TransactionsTable = Vue.extend({
           tableData.push({
             uuid: transaction.uuid,
             date: txDate,
-            index: `${txIdx + 1}`,
+            index: `${this.transactions.length - txIdx}`,
             type: "tx",
           });
           // create table rows from transaction rows
           transaction.rows.forEach((row, rowIdx) => {
-            const rate = txRates.find(
-              ({ currencyTicker, currencyTickerVs }) =>
-                currencyTicker === row.currencyTicker &&
-                currencyTickerVs === row.currencyTickerVs,
-            )?.value;
-            if (!rate) {
-              throw new Error("Rate missed");
-            }
-            const amount = row.amount.toFixed(
-              Array.from(this.projectTokens as Set<ICurrency>).find(
-                ({ ticker }) => ticker === row.currencyTicker,
-              )?.precision || 0,
+            const rate = getCurrencyRate(
+              txRates,
+              row.currencyTicker,
+              row.currencyTickerVs,
             );
+            const amount = row.amount.toString();
+            const amountVs = row.amountVs.toString();
             tableData.push({
               uuid: row.uuid,
               date: txDate,
-              index: `${txIdx + 1}.${rowIdx + 1}`,
+              index: `${this.transactions.length - txIdx}.${rowIdx + 1}`,
               type: "row",
               in: transaction.direction === "receive" ? amount : undefined,
               out: transaction.direction === "pay" ? `-${amount}` : undefined,
               tokenTicker: row.currencyTicker,
-              exchange: (row.amount * rate).toFixed(
-                Array.from(this.projectExchanges as Set<ICurrency>).find(
-                  ({ ticker }) => ticker === row.currencyTickerVs,
-                )?.precision || 0,
-              ),
+              exchange: amountVs,
               exchangeTicker: row.currencyTickerVs,
-              rate: rate >= 1 ? rate.toFixed(2) : rate.toString(),
+              rate: rate >= 1 ? rate.toFixed(2) : rate.toPrecision(5),
               labels: row.labels,
             });
           });

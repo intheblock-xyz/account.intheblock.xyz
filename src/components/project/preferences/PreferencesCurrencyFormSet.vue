@@ -20,7 +20,7 @@
           placeholder="Ticker"
         >
         </b-input>
-        <b-input
+        <!-- <b-input
           v-if="showGeckoIdInput"
           v-model="currency.geckoId"
           @keypress.native.enter="addCurrency"
@@ -33,7 +33,7 @@
           @keypress.native.enter="addCurrency"
           placeholder="Gecko vs ID"
         >
-        </b-input>
+        </b-input> -->
         <b-input
           v-model="currency.precision"
           @keypress.native.enter="addCurrency"
@@ -120,7 +120,7 @@ const PreferencesCurrencyFormSet = Vue.extend({
           ticker,
           geckoId,
           geckoVsId,
-          precision: precision ? precision.toString() : "",
+          precision: precision !== undefined ? precision.toString() : "",
         }),
       ) as ICurrencyFormData[],
     };
