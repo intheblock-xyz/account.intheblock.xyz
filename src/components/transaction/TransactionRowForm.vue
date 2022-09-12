@@ -322,6 +322,7 @@ const TransactionRowForm = Vue.extend({
       const [labelTitles, labelTexts] = getLabelsForm(
         this.projectLabelTitles as Set<string>,
         this.transactionRow,
+        [this.labelTitles, this.labelTexts],
       );
       this.labelTitles = labelTitles;
       this.labelTexts = labelTexts;

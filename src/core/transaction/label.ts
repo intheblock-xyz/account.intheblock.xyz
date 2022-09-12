@@ -17,13 +17,20 @@ export interface ILabelsForm {
 export function getLabelsForm(
   projectLabelTitles: Set<string>,
   labeledItem?: ILabels,
+  labels?: [string[], string[]],
 ): TLabelsTuple {
   function reduceLabels(acc: TLabelsTuple, title: string): TLabelsTuple {
-    const text = labeledItem?.labels.find(
-      (label) => label.title === title,
-    )?.text;
+    let text = "";
+    if (!!labels) {
+      const [labelTitles, labelTexts] = labels;
+      text = labelTexts[labelTitles.indexOf(title)];
+    }
+    if (!text && labeledItem) {
+      text =
+        labeledItem.labels.find((label) => label.title === title)?.text || "";
+    }
     acc[0].push(title);
-    acc[1].push(text || "");
+    acc[1].push(text);
     return acc;
   }
 
