@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import { getCurrencyRate } from "../app";
 import { ILabelsForm, getLabelsForm, cleanLabelsForm, ILabels } from "./label";
 import { TTransactionFormRates } from "./transaction";
 
@@ -22,6 +21,8 @@ export interface ITransactionRowForm extends ILabelsForm {
   currencyTickerVs: string;
   rate: string;
   lastTouched: "amount" | "exchange";
+  formErrors: Record<string, string>;
+  submitAttempts: number;
 }
 
 export interface ITransactionRowFormSubmit {
@@ -57,6 +58,8 @@ export function getTransactionRowForm(
     labelTitles,
     labelTexts,
     lastTouched: transactionRow?.lastTouched || "amount",
+    formErrors: {},
+    submitAttempts: 0,
   };
 }
 

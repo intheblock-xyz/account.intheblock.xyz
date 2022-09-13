@@ -1,6 +1,11 @@
 <template>
   <div class="columns is-multiline">
-    <b-field label="Amount" class="column is-3">
+    <b-field
+      label="Amount"
+      class="column is-3"
+      :type="formErrors.amount ? 'is-danger' : undefined"
+      :message="formErrors.amount"
+    >
       <b-input
         type="number"
         v-model="amount"
@@ -40,7 +45,12 @@
       </p>
     </b-field>
 
-    <b-field label="Exchange" class="column is-3">
+    <b-field
+      label="Exchange"
+      class="column is-3"
+      :type="formErrors.amountVs ? 'is-danger' : undefined"
+      :message="formErrors.amountVs"
+    >
       <b-input
         type="number"
         v-model="amountVs"
@@ -79,7 +89,12 @@
       </p>
     </b-field>
 
-    <b-field label="Rate" class="column is-3">
+    <b-field
+      label="Rate"
+      class="column is-3"
+      :type="formErrors.rate ? 'is-danger' : undefined"
+      :message="formErrors.rate"
+    >
       <b-input
         type="number"
         step="0.000000001"
@@ -127,7 +142,7 @@
 <script lang="ts">
 import repeat from "lodash/repeat";
 import Vue from "vue";
-import { getCurrencyPrecision, ICurrency, ICurrencyRate } from "@/core/app";
+import { getCurrencyPrecision, ICurrency } from "@/core/app";
 import {
   getLabelsForm,
   getTransactionRowForm,
@@ -333,7 +348,29 @@ const TransactionRowForm = Vue.extend({
       return precision === 0 ? "1" : `0.${repeat("0", precision - 1)}1`;
     },
 
+    validateForm(): boolean {
+      const formErrors: Record<string, string> = {};
+      const amount = parseFloat(this.amount);
+      if (!amount || amount < 0) {
+        formErrors.amount = "Please enter a number greater than 0";
+      }
+      const amountVs = parseFloat(this.amountVs);
+      if (!amountVs || amountVs < 0) {
+        formErrors.amountVs = "Please enter a number greater than 0";
+      }
+      const rate = parseFloat(this.rate);
+      if (!rate || rate < 0) {
+        formErrors.rate = "Please enter a number greater than 0";
+      }
+      this.formErrors = formErrors;
+      return Object.keys(this.formErrors).length === 0;
+    },
+
     getFormSubmit(): ITransactionRowFormSubmit {
+      this.submitAttempts += 1;
+      if (!this.validateForm()) {
+        throw new Error("Transaction row form validation failed");
+      }
       return {
         formData: {
           uuid: this.uuid,
@@ -345,6 +382,8 @@ const TransactionRowForm = Vue.extend({
           labelTitles: Array.from(this.labelTitles),
           labelTexts: Array.from(this.labelTexts),
           lastTouched: this.lastTouched,
+          formErrors: this.formErrors,
+          submitAttempts: this.submitAttempts,
         },
         transactionRow: this.transactionRow,
       };
@@ -374,8 +413,23 @@ const TransactionRowForm = Vue.extend({
       }
     },
 
+    amount() {
+      if (this.submitAttempts > 0) {
+        this.validateForm();
+      }
+    },
+
+    amountVs() {
+      if (this.submitAttempts > 0) {
+        this.validateForm();
+      }
+    },
+
     rate(newRate: string) {
       const rate = parseFloat(newRate);
+      if (this.submitAttempts > 0) {
+        this.validateForm();
+      }
       if (rate) {
         this.adjustFormDataFromRate(rate);
       } else {

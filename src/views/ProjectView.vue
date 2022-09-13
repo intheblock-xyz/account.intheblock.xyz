@@ -108,6 +108,7 @@ import {
 import {
   cleanTransactionFormValues,
   ITransaction,
+  ITransactionRowForm,
   TTransactionDirection,
 } from "@/core/transaction";
 import EditableText from "@/components/form/EditableText.vue";
@@ -338,32 +339,43 @@ export default Vue.extend({
             `No transaction row form with such uuid '${rowUuid}'`,
           );
         } else {
-          const { formData: rowFormData } = rowForm?.getFormSubmit();
-          return rowFormData;
+          try {
+            const { formData: rowFormData } = rowForm.getFormSubmit();
+            return rowFormData;
+          } catch (error) {
+            this.$buefy.notification.open({
+              duration: 5000,
+              position: "is-top",
+              type: "is-danger",
+              message: "Transaction form validation failed.",
+            });
+          }
         }
       });
 
-      // cast form data to transaction data
-      const updatedTransaction = cleanTransactionFormValues(
-        formData,
-        rowsFormData,
-        transaction,
-        transactionDirection,
-      );
-
-      // update transactions array
-      if (!this.transactions.find(({ uuid }) => uuid === transaction?.uuid)) {
-        this.transactions.push(updatedTransaction);
-      } else {
-        const transactionUuid = transaction.uuid;
-        const transactionIndex = this.transactions.findIndex(
-          ({ uuid }) => uuid === transactionUuid,
+      if (rowsFormData.every((formData) => !!formData)) {
+        // cast form data to transaction data
+        const updatedTransaction = cleanTransactionFormValues(
+          formData,
+          rowsFormData as ITransactionRowForm[],
+          transaction,
+          transactionDirection,
         );
-        this.transactions.splice(transactionIndex, 1, updatedTransaction);
-      }
 
-      // hide the form
-      this.hideTransactionForm();
+        // update transactions array
+        if (!this.transactions.find(({ uuid }) => uuid === transaction?.uuid)) {
+          this.transactions.push(updatedTransaction);
+        } else {
+          const transactionUuid = transaction.uuid;
+          const transactionIndex = this.transactions.findIndex(
+            ({ uuid }) => uuid === transactionUuid,
+          );
+          this.transactions.splice(transactionIndex, 1, updatedTransaction);
+        }
+
+        // hide the form
+        this.hideTransactionForm();
+      }
     },
 
     editTransaction(uuid: string) {
