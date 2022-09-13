@@ -392,6 +392,9 @@ export default Vue.extend({
 
     ["account.isSignedIn"]() {
       this.loadLastStoredProject();
+      if (!!this.editingTransaction) {
+        this.hideTransactionForm();
+      }
     },
   },
 
