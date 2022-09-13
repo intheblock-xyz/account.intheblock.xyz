@@ -4,6 +4,7 @@
 
     <ProjectToolbar
       @newProject="newProject"
+      @showWallet="showWallet"
       @showPreferences="showPreferences"
       @importFile="importFile"
       @exportJson="exportJson"
@@ -121,6 +122,7 @@ import {
   TransactionsTable,
   TransactionsTableSimple,
 } from "@/components/transaction";
+import { WalletModal } from "@/components/wallet";
 
 export default Vue.extend({
   name: "ProjectView",
@@ -267,6 +269,16 @@ export default Vue.extend({
       this.updateProjectLabelTitles(labelTitles);
       this.updateProjectTokens(tokens);
       this.updateProjectExchanges(exchanges);
+    },
+
+    showWallet() {
+      this.$buefy.modal.open({
+        parent: this,
+        component: WalletModal,
+        hasModalCard: true,
+        props: {},
+        events: {},
+      });
     },
 
     importFile() {

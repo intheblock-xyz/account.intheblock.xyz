@@ -3,6 +3,7 @@
     <div class="column is-6">
       <div class="buttons">
         <b-button @click="$emit('newProject')">New project</b-button>
+        <WalletButton @showWallet="$emit('showWallet')" />
         <b-button icon-left="cog" @click="$emit('showPreferences')"></b-button>
       </div>
     </div>
@@ -30,8 +31,13 @@
 
 <script lang="ts">
 import Vue from "vue";
+import { WalletButton } from "../wallet";
 
 export default Vue.extend({
   name: "ProjectToolbar",
+
+  components: {
+    WalletButton,
+  },
 });
 </script>
