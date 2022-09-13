@@ -1,7 +1,10 @@
 <template>
   <div class="columns is-multiline">
     <div class="column is-12">
-      <b-table :data="tableData">
+      <b-table
+        :data="tableData"
+        :row-class="(row) => row.type === 'tx' && 'is-transaction'"
+      >
         <b-table-column field="index" label="#" v-slot="props" width="55">
           {{ props.row.index }}
         </b-table-column>
@@ -11,11 +14,25 @@
         </b-table-column>
 
         <b-table-column field="in" label="In" v-slot="props" numeric>
-          {{ props.row.type === "row" ? props.row.in || "&ndash;" : "" }}
+          <b-icon
+            v-if="props.row.type === 'tx' && props.row.direction === 'receive'"
+            icon="arrow-down-bold"
+            type="is-success"
+          ></b-icon>
+          <span v-else-if="props.row.type === 'row'">
+            {{ props.row.in }}
+          </span>
         </b-table-column>
 
         <b-table-column field="out" label="Out" v-slot="props" numeric>
-          {{ props.row.type === "row" ? props.row.out || "&ndash;" : "" }}
+          <b-icon
+            v-if="props.row.type === 'tx' && props.row.direction === 'pay'"
+            icon="arrow-up-bold"
+            type="is-danger"
+          ></b-icon>
+          <span v-else-if="props.row.type === 'row'">
+            {{ props.row.out }}
+          </span>
         </b-table-column>
 
         <b-table-column field="tokenTicker" label="Ticker" v-slot="props">
@@ -93,7 +110,11 @@
 import orderBy from "lodash/orderBy";
 import moment from "moment";
 import Vue from "vue";
-import { ITransaction, ITransactionRow } from "@/core/transaction";
+import {
+  ITransaction,
+  ITransactionRow,
+  TTransactionDirection,
+} from "@/core/transaction";
 import { getCurrencyRate } from "@/core/app";
 
 interface ITableDataRow {
@@ -101,6 +122,7 @@ interface ITableDataRow {
   date: string;
   index: string;
   type: "tx" | "row";
+  direction?: TTransactionDirection;
   in?: string;
   out?: string;
   tokenTicker?: string;
@@ -151,6 +173,7 @@ const TransactionsTable = Vue.extend({
             date: txDate,
             index: `${this.transactions.length - txIdx}`,
             type: "tx",
+            direction: transaction.direction,
           });
           // create table rows from transaction rows
           transaction.rows.forEach((row, rowIdx) => {

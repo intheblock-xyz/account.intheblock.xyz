@@ -54,3 +54,9 @@ export default Vue.extend({
   },
 });
 </script>
+
+<style>
+tr.is-transaction {
+  background: #f3f3f3;
+}
+</style>

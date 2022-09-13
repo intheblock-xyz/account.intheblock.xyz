@@ -7,11 +7,11 @@
         </b-table-column>
 
         <b-table-column field="in" label="Ada In" v-slot="props" numeric>
-          {{ props.row.in || "&ndash;" }}
+          {{ props.row.in }}
         </b-table-column>
 
         <b-table-column field="out" label="Ada Out" v-slot="props" numeric>
-          {{ props.row.out || "&ndash;" }}
+          {{ props.row.out }}
         </b-table-column>
 
         <b-table-column field="exchange" label="USD" v-slot="props" numeric>
