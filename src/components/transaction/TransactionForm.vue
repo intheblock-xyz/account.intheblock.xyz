@@ -32,8 +32,9 @@
         :transactionRow="getTransactionRowByUuid(rowUuid)"
         :isAddRowButtonEnabled="rowUuids.length < maxTransactionRowsNum"
         :isRemoveRowButtonEnabled="rowUuids.length > 1"
-        :rates="transaction ? transaction.rates : undefined"
+        :rates="rates"
         ref="rowForms"
+        @onUpdateRate="updateRate"
         @submit="$emit('submit')"
         @addRowForm="addRowForm"
         @removeRowForm="removeRowForm"
@@ -104,6 +105,11 @@ const TransactionForm = Vue.extend({
         }
       }
       this.rowUuids.splice(afterIndex, 0, uuidv4());
+      this.$nextTick(() => {
+        (this.$refs.rowForms as TTransactionRowForm[])[
+          afterIndex
+        ]?.focusAmount();
+      });
     },
 
     removeRowForm(rowUuid: string) {
@@ -120,6 +126,17 @@ const TransactionForm = Vue.extend({
       );
     },
 
+    updateRate(
+      currencyTicker: string,
+      currencyTickerVs: string,
+      rate: number,
+    ): void {
+      this.rates[`${currencyTicker}:${currencyTickerVs}`] = rate;
+      (this.$refs.rowForms as TTransactionRowForm[]).forEach((rowForm) => {
+        rowForm.updateRate(currencyTicker, currencyTickerVs, rate);
+      });
+    },
+
     getFormSubmit(
       transactionDirection?: TTransactionDirection,
     ): ITransactionFormSubmit {
@@ -130,6 +147,7 @@ const TransactionForm = Vue.extend({
           rowUuids: (this.$refs.rowForms as TTransactionRowForm[]).map(
             (rowForm) => rowForm.uuid,
           ),
+          rates: this.rates,
         },
         transaction: {
           ...this.transaction,
@@ -139,7 +157,13 @@ const TransactionForm = Vue.extend({
     },
   },
 
-  watch: {},
+  watch: {
+    ["account.isSignedIn"](isSignedIn: boolean) {
+      if (!isSignedIn && this.rowUuids.length > 1) {
+        this.rowUuids.splice(1, this.rowUuids.length - 1);
+      }
+    },
+  },
 
   mounted() {
     if (!this.transaction) {

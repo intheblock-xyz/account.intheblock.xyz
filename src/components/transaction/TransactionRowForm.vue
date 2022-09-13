@@ -2,12 +2,12 @@
   <div class="columns is-multiline">
     <b-field label="Amount" class="column is-3">
       <b-input
-        required
         type="number"
         v-model="amount"
+        ref="amountInput"
         :step="getCurrencyInputStep(currencyTicker)"
         :min="getCurrencyInputStep(currencyTicker)"
-        :size="account.isSignedIn ? 'is-small' : undefined"
+        @blur="adjustRateFromAmounts"
         @keyup.native="adjustFormDataFromAmount"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
@@ -21,7 +21,6 @@
         >
           <template #trigger="{ active }">
             <b-button
-              :size="account.isSignedIn ? 'is-small' : undefined"
               :label="currencyTicker.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
             />
@@ -43,12 +42,11 @@
 
     <b-field label="Exchange" class="column is-3">
       <b-input
-        required
         type="number"
         v-model="amountVs"
         :step="getCurrencyInputStep(currencyTickerVs)"
         :min="getCurrencyInputStep(currencyTickerVs)"
-        :size="account.isSignedIn ? 'is-small' : undefined"
+        @blur="adjustRateFromAmounts"
         @keyup.native="adjustFormDataFromExchange"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
@@ -64,7 +62,6 @@
             <b-button
               :label="currencyTickerVs.toUpperCase()"
               :icon-right="active ? 'menu-up' : 'menu-down'"
-              :size="account.isSignedIn ? 'is-small' : undefined"
             />
           </template>
 
@@ -84,13 +81,10 @@
 
     <b-field label="Rate" class="column is-3">
       <b-input
-        required
         type="number"
         step="0.000000001"
         min="0.000000001"
         v-model="rate"
-        :size="account.isSignedIn ? 'is-small' : undefined"
-        @keyup.native="adjustFormDataFromRate"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -103,7 +97,6 @@
     >
       <b-input
         v-model="labelTexts[index]"
-        :size="account.isSignedIn ? 'is-small' : undefined"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -112,7 +105,6 @@
       <p class="control" :style="{ width: '50%' }">
         <b-button
           expanded
-          size="is-small"
           type="is-success is-light"
           icon-left="plus"
           :disabled="!isAddRowButtonEnabled"
@@ -122,7 +114,6 @@
       <p class="control" :style="{ width: '50%' }">
         <b-button
           expanded
-          size="is-small"
           type="is-danger is-light"
           icon-left="minus"
           :disabled="!isRemoveRowButtonEnabled"
@@ -141,6 +132,7 @@ import {
   getLabelsForm,
   getTransactionRowForm,
   ITransactionRowFormSubmit,
+  TTransactionFormRates,
 } from "@/core/transaction";
 
 const TransactionRowForm = Vue.extend({
@@ -162,6 +154,11 @@ const TransactionRowForm = Vue.extend({
       required: true,
     },
 
+    rates: {
+      type: Object,
+      required: true,
+    },
+
     transactionRowUuid: {
       type: String,
       required: false,
@@ -169,11 +166,6 @@ const TransactionRowForm = Vue.extend({
 
     transactionRow: {
       type: Object,
-      required: false,
-    },
-
-    rates: {
-      type: Array,
       required: false,
     },
 
@@ -195,7 +187,7 @@ const TransactionRowForm = Vue.extend({
       this.projectLabelTitles as Set<string>,
       this.transactionRowUuid,
       this.transactionRow,
-      this.rates as ICurrencyRate[],
+      this.rates as TTransactionFormRates,
     );
   },
 
@@ -212,6 +204,10 @@ const TransactionRowForm = Vue.extend({
       return (Array.from(this.projectExchanges) as ICurrency[]).map(
         ({ ticker }) => ticker,
       );
+    },
+
+    ratesKey(): string {
+      return `${this.currencyTicker}:${this.currencyTickerVs}`;
     },
   },
 
@@ -254,37 +250,75 @@ const TransactionRowForm = Vue.extend({
       this.lastTouched = "exchange";
     },
 
-    adjustFormDataFromRate(e: Event) {
-      const rate = e
-        ? parseFloat((e.target as HTMLInputElement).value)
-        : parseFloat(this.rate);
-      if (rate) {
-        if (this.lastTouched === "amount") {
-          const amount = parseFloat(this.amount);
-          const exchangePrecision = getCurrencyPrecision(
-            Array.from(this.projectExchanges) as ICurrency[],
-            this.currencyTickerVs,
-          );
-          let amountVs = "";
-          if (amount === 0) {
-            amountVs = "0";
-          } else if (amount) {
-            amountVs = (amount * rate).toFixed(exchangePrecision);
+    adjustFormDataFromRate(rate: number) {
+      if (this.lastTouched === "amount") {
+        const amount = parseFloat(this.amount);
+        const exchangePrecision = getCurrencyPrecision(
+          Array.from(this.projectExchanges) as ICurrency[],
+          this.currencyTickerVs,
+        );
+        let amountVs = "";
+        if (amount === 0) {
+          amountVs = "0";
+        } else if (amount) {
+          amountVs = (amount * rate).toFixed(exchangePrecision);
+        }
+        this.amountVs = amountVs.toString();
+      } else {
+        const amountVs = parseFloat(this.amountVs);
+        const amountPrecision = getCurrencyPrecision(
+          Array.from(this.projectTokens) as ICurrency[],
+          this.currencyTicker,
+        );
+        let amount = "";
+        if (amountVs === 0) {
+          amount = "0";
+        } else if (amountVs) {
+          amount = (amountVs / rate).toFixed(amountPrecision);
+        }
+        this.amount = amount.toString();
+      }
+    },
+
+    adjustRateFromAmounts() {
+      const amount = parseFloat(this.amount);
+      const amountVs = parseFloat(this.amountVs);
+      if (amount && this.currencyTicker) {
+        const amountPrecision = getCurrencyPrecision(
+          Array.from(this.projectTokens) as ICurrency[],
+          this.currencyTicker,
+        );
+        this.amount = amount.toFixed(amountPrecision);
+      }
+      if (amountVs && this.currencyTickerVs) {
+        const exchangePrecision = getCurrencyPrecision(
+          Array.from(this.projectExchanges) as ICurrency[],
+          this.currencyTickerVs,
+        );
+        this.amountVs = amountVs.toFixed(exchangePrecision);
+      }
+    },
+
+    focusAmount() {
+      (this.$refs.amountInput as HTMLInputElement).focus();
+    },
+
+    updateRate(
+      currencyTicker: string,
+      currencyTickerVs: string,
+      rate: number,
+    ): void {
+      if (
+        this.currencyTicker === currencyTicker &&
+        this.currencyTickerVs === currencyTickerVs
+      ) {
+        if (!isNaN(rate)) {
+          const currentRate = parseFloat(this.rate);
+          if (currentRate !== rate) {
+            this.rate = rate.toString();
           }
-          this.amountVs = amountVs.toString();
         } else {
-          const amountVs = parseFloat(this.amountVs);
-          const amountPrecision = getCurrencyPrecision(
-            Array.from(this.projectTokens) as ICurrency[],
-            this.currencyTicker,
-          );
-          let amount = "";
-          if (amountVs === 0) {
-            amount = "0";
-          } else if (amountVs) {
-            amount = (amountVs / rate).toFixed(amountPrecision);
-          }
-          this.amount = amount.toString();
+          this.rate = "";
         }
       }
     },
@@ -337,6 +371,41 @@ const TransactionRowForm = Vue.extend({
     exchangeTickersList(tickersList: string[]) {
       if (!tickersList.includes(this.currencyTickerVs)) {
         this.currencyTickerVs = tickersList[0];
+      }
+    },
+
+    rate(newRate: string) {
+      const rate = parseFloat(newRate);
+      if (rate) {
+        this.adjustFormDataFromRate(rate);
+      } else {
+        if (this.lastTouched === "amount") {
+          this.amountVs = "";
+        } else {
+          this.amount = "";
+        }
+      }
+      if (this.currencyTicker && this.currencyTickerVs) {
+        this.$emit(
+          "onUpdateRate",
+          this.currencyTicker,
+          this.currencyTickerVs,
+          rate,
+        );
+      }
+    },
+
+    ratesKey(newRatesKey: string) {
+      const rate: number | undefined = this.rates[newRatesKey];
+      if (rate) {
+        this.rate = rate.toString();
+      } else {
+        this.rate = "";
+        if (this.lastTouched === "amount") {
+          this.amountVs = "";
+        } else {
+          this.amount = "";
+        }
       }
     },
   },

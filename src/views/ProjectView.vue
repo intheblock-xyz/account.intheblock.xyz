@@ -142,7 +142,7 @@ export default Vue.extend({
       isLoaded: false,
       isFormVisible: false,
       editingTransaction: null,
-      maxTransactionRowsNum: 5,
+      maxTransactionRowsNum: 10,
     };
     return data;
   },

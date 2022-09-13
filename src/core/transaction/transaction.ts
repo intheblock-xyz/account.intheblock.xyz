@@ -8,6 +8,7 @@ import {
 } from "./row";
 
 export type TTransactionDirection = "pay" | "receive";
+export type TTransactionFormRates = Record<string, number>;
 
 export interface ITransaction {
   uuid: string;
@@ -23,6 +24,7 @@ export interface ITransactionForm {
   readonly uuid: string;
   processedAt: Date;
   rowUuids: string[];
+  rates: TTransactionFormRates;
 }
 
 export interface ITransactionFormSubmit {
@@ -37,7 +39,19 @@ export function getTransactionForm(
     uuid: transaction?.uuid || uuidv4(),
     processedAt: new Date(transaction?.processedAt || Date.now()),
     rowUuids: transaction?.rows.map(({ uuid }) => uuid) || [],
+    rates: getTransactionFormRates(transaction?.rates || []),
   };
+}
+
+function getTransactionFormRates(
+  rates: ICurrencyRate[],
+): TTransactionFormRates {
+  return Object.fromEntries(
+    rates.map(({ currencyTicker, currencyTickerVs, value }) => [
+      `${currencyTicker}:${currencyTickerVs}`,
+      value,
+    ]),
+  );
 }
 
 function getRatesFromRowsFormData(
