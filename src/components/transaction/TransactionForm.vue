@@ -16,14 +16,8 @@
       ></b-datepicker>
     </b-field>
 
-    <div
-      class="column is-12"
-      v-for="(rowUuid, index) in rowUuids"
-      :key="rowUuid"
-    >
-      <h5 v-if="account.isSignedIn" class="title is-5 transactionRowTitle">
-        Row {{ index + 1 }}
-      </h5>
+    <div class="column is-12" v-for="rowUuid in rowUuids" :key="rowUuid">
+      <hr />
       <TransactionRowForm
         :projectLabelTitles="projectLabelTitles"
         :projectTokens="projectTokens"
@@ -186,5 +180,9 @@ export type TTransactionForm = InstanceType<typeof TransactionForm>;
   border-top: 1px solid hsl(0deg 0% 86%);
   padding-top: 1em;
   margin-bottom: 1em;
+}
+
+hr {
+  margin: 0 0 0.75rem;
 }
 </style>

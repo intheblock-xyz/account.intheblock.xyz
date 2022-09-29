@@ -54,6 +54,7 @@
       <b-input
         type="number"
         v-model="amountVs"
+        :disabled="!isCurrencyConvertible"
         :step="getCurrencyInputStep(currencyTickerVs)"
         :min="getCurrencyInputStep(currencyTickerVs)"
         @blur="adjustRateFromAmounts"
@@ -66,6 +67,7 @@
           aria-role="list"
           v-if="account.isSignedIn"
           v-model="currencyTickerVs"
+          :disabled="!isCurrencyConvertible"
           position="is-bottom-left"
         >
           <template #trigger="{ active }">
@@ -98,8 +100,9 @@
       <b-input
         type="number"
         step="0.000000001"
-        min="0.000000001"
+        min="0"
         v-model="rate"
+        :disabled="!isCurrencyConvertible"
         @keypress.native.enter="$emit('submit')"
       ></b-input>
     </b-field>
@@ -142,7 +145,11 @@
 <script lang="ts">
 import repeat from "lodash/repeat";
 import Vue from "vue";
-import { getCurrencyPrecision, ICurrency } from "@/core/app";
+import {
+  getCurrencyIsConvertible,
+  getCurrencyPrecision,
+  ICurrency,
+} from "@/core/app";
 import {
   getLabelsForm,
   getTransactionRowForm,
@@ -218,6 +225,15 @@ const TransactionRowForm = Vue.extend({
     exchangeTickersList(): string[] {
       return (Array.from(this.projectExchanges) as ICurrency[]).map(
         ({ ticker }) => ticker,
+      );
+    },
+
+    isCurrencyConvertible(): boolean {
+      return getCurrencyIsConvertible(
+        Array.from(this.projectTokens).concat(
+          Array.from(this.projectExchanges),
+        ) as ICurrency[],
+        this.currencyTicker,
       );
     },
 
@@ -354,13 +370,15 @@ const TransactionRowForm = Vue.extend({
       if (!amount || amount < 0) {
         formErrors.amount = "Please enter a number greater than 0";
       }
-      const amountVs = parseFloat(this.amountVs);
-      if (!amountVs || amountVs < 0) {
-        formErrors.amountVs = "Please enter a number greater than 0";
-      }
-      const rate = parseFloat(this.rate);
-      if (!rate || rate < 0) {
-        formErrors.rate = "Please enter a number greater than 0";
+      if (this.isCurrencyConvertible) {
+        const amountVs = parseFloat(this.amountVs);
+        if (!amountVs || amountVs < 0) {
+          formErrors.amountVs = "Please enter a number greater than 0";
+        }
+        const rate = parseFloat(this.rate);
+        if (isNaN(rate) || rate < 0) {
+          formErrors.rate = "Please enter a number greater or equals 0";
+        }
       }
       this.formErrors = formErrors;
       return Object.keys(this.formErrors).length === 0;
@@ -378,7 +396,7 @@ const TransactionRowForm = Vue.extend({
           amountVs: this.amountVs,
           currencyTicker: this.currencyTicker,
           currencyTickerVs: this.currencyTickerVs,
-          rate: this.rate,
+          rate: this.rate || "0",
           labelTitles: Array.from(this.labelTitles),
           labelTexts: Array.from(this.labelTexts),
           lastTouched: this.lastTouched,
@@ -427,25 +445,27 @@ const TransactionRowForm = Vue.extend({
 
     rate(newRate: string) {
       const rate = parseFloat(newRate);
-      if (this.submitAttempts > 0) {
-        this.validateForm();
-      }
-      if (rate) {
-        this.adjustFormDataFromRate(rate);
-      } else {
-        if (this.lastTouched === "amount") {
-          this.amountVs = "";
-        } else {
-          this.amount = "";
+      if (!isNaN(rate)) {
+        if (this.submitAttempts > 0) {
+          this.validateForm();
         }
-      }
-      if (this.currencyTicker && this.currencyTickerVs) {
-        this.$emit(
-          "onUpdateRate",
-          this.currencyTicker,
-          this.currencyTickerVs,
-          rate,
-        );
+        if (rate) {
+          this.adjustFormDataFromRate(rate);
+        } else {
+          if (this.lastTouched === "amount") {
+            this.amountVs = "";
+          } else {
+            this.amount = "";
+          }
+        }
+        if (this.currencyTicker && this.currencyTickerVs) {
+          this.$emit(
+            "onUpdateRate",
+            this.currencyTicker,
+            this.currencyTickerVs,
+            rate,
+          );
+        }
       }
     },
 

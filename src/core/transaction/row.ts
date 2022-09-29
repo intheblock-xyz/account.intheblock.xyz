@@ -40,10 +40,13 @@ export function getTransactionRowForm(
   const currencyTicker = transactionRow?.currencyTicker || "";
   const currencyTickerVs = transactionRow?.currencyTickerVs || "";
   if (transactionRow && rates) {
-    rate = rates[`${currencyTicker}:${currencyTickerVs}`].toString() || "";
+    const rateKey = `${currencyTicker}:${currencyTickerVs}`;
+    rate = rates[rateKey] ? rates[rateKey].toString() : "";
   }
   const amount = transactionRow?.amount.toString() || "";
-  const amountVs = transactionRow?.amountVs.toString() || "";
+  const amountVs = transactionRow?.amountVs
+    ? transactionRow?.amountVs.toString()
+    : "";
   const [labelTitles, labelTexts] = getLabelsForm(
     projectLabelTitles,
     transactionRow,

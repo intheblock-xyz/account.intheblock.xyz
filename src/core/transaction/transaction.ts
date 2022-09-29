@@ -60,7 +60,7 @@ function getRatesFromRowsFormData(
   return rowsFormData.reduce(
     (rates, { currencyTicker, currencyTickerVs, rate }) => {
       const value = parseFloat(rate);
-      if (!value) {
+      if (isNaN(value) || value < 0) {
         throw new Error("Rate missed");
       }
       if (

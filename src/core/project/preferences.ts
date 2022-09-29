@@ -17,10 +17,24 @@ export function getDefaultProjectLabelTitles(): string[] {
 
 export function getDefaultProjectTokens(): ICurrency[] {
   return [
-    { ticker: "ADA", name: "Cardano Ada", geckoId: "cardano", precision: 6 },
+    {
+      ticker: "ADA",
+      convertible: true,
+      name: "Cardano Ada",
+      geckoId: "cardano",
+      precision: 6,
+    },
   ];
 }
 
 export function getDefaultProjectExchanges(): ICurrency[] {
-  return [{ ticker: "USD", name: "US Dollar", geckoVsId: "usd", precision: 2 }];
+  return [
+    {
+      ticker: "USD",
+      convertible: true,
+      name: "US Dollar",
+      geckoVsId: "usd",
+      precision: 2,
+    },
+  ];
 }

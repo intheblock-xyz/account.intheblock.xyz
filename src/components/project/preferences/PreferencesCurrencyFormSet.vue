@@ -44,6 +44,14 @@
           placeholder="Dec."
         >
         </b-input>
+        <b-checkbox-button
+          v-if="unit === 'token'"
+          v-model="currency.convertible"
+          native-value="convertible"
+          type="is-success"
+        >
+          <b-icon icon="refresh-circle"></b-icon>
+        </b-checkbox-button>
         <p class="control">
           <b-button
             type="is-danger is-light"
@@ -66,9 +74,11 @@ import { v4 as uuidv4 } from "uuid";
 import Vue from "vue";
 import { ICurrency } from "@/core/app";
 
-interface ICurrencyFormData extends Omit<ICurrency, "precision"> {
+interface ICurrencyFormData
+  extends Omit<ICurrency, "convertible" | "precision"> {
   uuid: string;
   precision: string;
+  convertible: "convertible"[];
 }
 
 const PreferencesCurrencyFormSet = Vue.extend({
@@ -114,10 +124,11 @@ const PreferencesCurrencyFormSet = Vue.extend({
   data() {
     return {
       currencies: Array.from(this.initialCurrencies as Set<ICurrency>).map(
-        ({ name, ticker, geckoId, geckoVsId, precision }) => ({
+        ({ name, ticker, convertible, geckoId, geckoVsId, precision }) => ({
           uuid: uuidv4(),
           name,
           ticker,
+          convertible: convertible ? ["convertible"] : [],
           geckoId,
           geckoVsId,
           precision: precision !== undefined ? precision.toString() : "",
@@ -132,6 +143,7 @@ const PreferencesCurrencyFormSet = Vue.extend({
         uuid: uuidv4(),
         name: "",
         ticker: "",
+        convertible: ["convertible"],
         geckoId: "",
         geckoVsId: "",
         precision: "",
@@ -160,13 +172,23 @@ const PreferencesCurrencyFormSet = Vue.extend({
         currencies: new Set<ICurrency>(
           this.currencies
             .filter(({ ticker }) => !!ticker)
-            .map(({ name, ticker, geckoId, geckoVsId, precision }) => ({
-              name,
-              ticker,
-              geckoId,
-              geckoVsId,
-              precision: precision ? parseInt(precision) : undefined,
-            })),
+            .map(
+              ({
+                name,
+                ticker,
+                convertible,
+                geckoId,
+                geckoVsId,
+                precision,
+              }) => ({
+                name,
+                ticker,
+                convertible: convertible.includes("convertible"),
+                geckoId,
+                geckoVsId,
+                precision: precision ? parseInt(precision) : undefined,
+              }),
+            ),
         ),
       };
     },
@@ -213,7 +235,19 @@ export type TPreferencesCurrencyFormSet = InstanceType<
   flex-basis: 20%;
 }
 
+.currencyInputsRow > :nth-child(4) {
+  flex-basis: 3%;
+}
+
 .currencyInputsRow > :last-child {
   flex-basis: 40px;
+}
+
+.currencyInputsRow > .control > .checkbox {
+  padding: 0;
+}
+
+.currencyInputsRow > .control > .checkbox > .icon {
+  margin: 0;
 }
 </style>

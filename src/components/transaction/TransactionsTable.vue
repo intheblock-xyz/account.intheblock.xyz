@@ -183,7 +183,8 @@ const TransactionsTable = Vue.extend({
               row.currencyTickerVs,
             );
             const amount = row.amount.toString();
-            const amountVs = row.amountVs.toString();
+            const amountVs = row.amountVs ? row.amountVs.toString() : "–";
+            const exchangeTicker = row.amountVs ? row.currencyTickerVs : "";
             tableData.push({
               uuid: row.uuid,
               date: txDate,
@@ -193,8 +194,13 @@ const TransactionsTable = Vue.extend({
               out: transaction.direction === "pay" ? `-${amount}` : undefined,
               tokenTicker: row.currencyTicker,
               exchange: amountVs,
-              exchangeTicker: row.currencyTickerVs,
-              rate: rate >= 1 ? rate.toFixed(2) : rate.toPrecision(5),
+              exchangeTicker,
+              rate:
+                rate === 0
+                  ? "–"
+                  : rate >= 1
+                  ? rate.toFixed(2)
+                  : rate.toPrecision(5),
               labels: row.labels,
             });
           });
